@@ -1,0 +1,14 @@
+version: '2'
+
+services:
+        build:
+                build: ./pefi/
+                volumes:
+                        - ./pefi/:/pefi/src/
+                        - ./bin/:/pefi/bin/
+                command: "tail -f /dev/null"
+                #environment:
+                        #- GOPATH=/home/root/go
+        run:
+                build: ./bin/
+                image: "simonschneider/pefi"
