@@ -1,3 +1,3 @@
 FROM scratch
-COPY main /
+COPY pefi/ /
 CMD ["/main"]

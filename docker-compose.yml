@@ -1,14 +1,17 @@
 version: '2'
 
 services:
-        build:
-                build: ./pefi/
-                volumes:
-                        - ./pefi/:/pefi/src/
-                        - ./bin/:/pefi/bin/
-                command: "tail -f /dev/null"
-                #environment:
-                        #- GOPATH=/home/root/go
         run:
-                build: ./bin/
-                image: "simonschneider/pefi"
+                build: .
+                volumes:
+                        - .:/go/src/pefi
+                tty: true
+                environment:
+                        - GOPATH=/go
+                        - redis-host=redis
+                        - redis-port=6379
+                ports:
+                        - 8080:8080
+        redis:
+                image: 'redis:alpine'
+
