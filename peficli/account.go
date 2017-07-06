@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
 	"net/http"
-	"os"
 	"pefi/model"
 )
 
@@ -86,21 +84,7 @@ func listExternalAccountsCmd() cli.Command {
 		Usage: "print accounts",
 		Flags: accLsFlags,
 		Action: func(c *cli.Context) (err error) {
-			accs, err := listExternalAccounts()
-			if err != nil {
-				return err
-			}
-			if c.Bool("json") {
-				json.NewEncoder(os.Stdout).Encode(accs)
-				return
-			}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"id", "name", "description", "labels"})
-			for _, a := range *accs {
-				table.Append(a.Table())
-			}
-			table.Render()
-			return err
+			return ListCmd(c, listExternalAccounts)
 		},
 	}
 }
@@ -111,37 +95,19 @@ func listInternalAccountsCmd() cli.Command {
 		Usage: "print accounts",
 		Flags: accLsFlags,
 		Action: func(c *cli.Context) (err error) {
-			accs, err := listInternalAccounts()
-			if err != nil {
-				return err
-			}
-			if c.Bool("json") {
-				json.NewEncoder(os.Stdout).Encode(accs)
-				return
-			}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"id", "name", "description", "labels", "balance"})
-			var total float64
-			for _, a := range *accs {
-				table.Append(a.Table())
-				total += a.Balance
-			}
-			stotal := fmt.Sprintf("%.2f", total)
-			table.SetFooter([]string{"", "", "", "total", stotal})
-			table.Render()
-			return err
+			return ListCmd(c, listInternalAccounts)
 		},
 	}
 }
 
-func listExternalAccounts() (accs *[]model.ExternalAccount, err error) {
+func listExternalAccounts() (accs model.Tabular, err error) {
 	resp, err := http.Get(GetAddr("/accounts/external"))
 	if err != nil {
 		fmt.Printf("error: %s\n", err)
 		return
 	}
 	defer resp.Body.Close()
-	accs = new([]model.ExternalAccount)
+	accs = new(model.ExternalAccounts)
 	if err = json.NewDecoder(resp.Body).Decode(accs); err != nil {
 		fmt.Printf("error unmarshaling: %s\n", err)
 		return
@@ -149,14 +115,14 @@ func listExternalAccounts() (accs *[]model.ExternalAccount, err error) {
 	return
 }
 
-func listInternalAccounts() (accs *[]model.InternalAccount, err error) {
+func listInternalAccounts() (accs model.Tabular, err error) {
 	resp, err := http.Get(GetAddr("/accounts/internal"))
 	if err != nil {
 		fmt.Printf("error: %s\n", err)
 		return
 	}
 	defer resp.Body.Close()
-	accs = new([]model.InternalAccount)
+	accs = new(model.InternalAccounts)
 	if err = json.NewDecoder(resp.Body).Decode(accs); err != nil {
 		fmt.Printf("error unmarshaling: %s\n", err)
 		return
@@ -170,70 +136,25 @@ func addExternalAccountCmd() cli.Command {
 		Usage: "add account",
 		Flags: accAddFlags,
 		Action: func(c *cli.Context) (err error) {
-			var nacc *model.ExternalAccount
-			if path := c.String("file"); path != "" {
-				acc := new(model.ExternalAccount)
-				file, err := os.Open(path)
-				if err != nil {
-					return err
-				}
-				if err = json.NewDecoder(file).Decode(acc); err != nil {
-					return err
-				}
-				nacc, err = addExternalAccount(*acc)
-			} else if c.String("name") != "" {
-				acc := model.ExternalAccount{
-					Name:        c.String("name"),
-					Description: c.String("description"),
-					LabelIds:    c.Int64Slice("labels"),
-				}
-				nacc, err = addExternalAccount(acc)
-			} else {
-				return nil
-			}
-			err = json.NewEncoder(os.Stdout).Encode(nacc)
-			return err
+			return AddCmd(
+				c,
+				new(model.ExternalAccount),
+				createExternalAccount,
+				addExternalAccount,
+			)
 		},
 	}
 }
 
-func addInternalAccountCmd() cli.Command {
-	return cli.Command{
-		Name:  "add",
-		Usage: "add account",
-		Flags: accAddFlags,
-		Action: func(c *cli.Context) (err error) {
-			var nacc *model.InternalAccount
-			if path := c.String("file"); path != "" {
-				acc := new(model.InternalAccount)
-				file, err := os.Open(path)
-				if err != nil {
-					return err
-				}
-				if err = json.NewDecoder(file).Decode(acc); err != nil {
-					return err
-				}
-				nacc, err = addInternalAccount(*acc)
-			} else if c.String("name") != "" {
-				acc := model.InternalAccount{
-					ExternalAccount: model.ExternalAccount{
-						Name:        c.String("name"),
-						Description: c.String("description"),
-						LabelIds:    c.Int64Slice("labels"),
-					},
-					Balance: c.Float64("balance"),
-				}
-				nacc, err = addInternalAccount(acc)
-			} else {
-				return nil
-			}
-			err = json.NewEncoder(os.Stdout).Encode(nacc)
-			return err
-		},
-	}
+func createExternalAccount(c *cli.Context) (t model.Tabular, err error) {
+	return &model.ExternalAccount{
+		Name:        c.String("name"),
+		Description: c.String("description"),
+		LabelIds:    c.Int64Slice("labels"),
+	}, nil
 }
 
-func addExternalAccount(acc model.ExternalAccount) (nacc *model.ExternalAccount, err error) {
+func addExternalAccount(acc model.Tabular) (nacc model.Tabular, err error) {
 	buf, err := json.Marshal(acc)
 	req, err := http.NewRequest("POST", GetAddr("/accounts/external"), bytes.NewBuffer(buf))
 	if err != nil {
@@ -252,7 +173,34 @@ func addExternalAccount(acc model.ExternalAccount) (nacc *model.ExternalAccount,
 	return
 }
 
-func addInternalAccount(acc model.InternalAccount) (nacc *model.InternalAccount, err error) {
+func addInternalAccountCmd() cli.Command {
+	return cli.Command{
+		Name:  "add",
+		Usage: "add account",
+		Flags: accAddFlags,
+		Action: func(c *cli.Context) (err error) {
+			return AddCmd(
+				c,
+				new(model.InternalAccount),
+				createInternalAccount,
+				addInternalAccount,
+			)
+		},
+	}
+}
+
+func createInternalAccount(c *cli.Context) (t model.Tabular, err error) {
+	return &model.InternalAccount{
+		ExternalAccount: model.ExternalAccount{
+			Name:        c.String("name"),
+			Description: c.String("description"),
+			LabelIds:    c.Int64Slice("labels"),
+		},
+		Balance: c.Float64("balance"),
+	}, nil
+}
+
+func addInternalAccount(acc model.Tabular) (nacc model.Tabular, err error) {
 	buf, err := json.Marshal(acc)
 	req, err := http.NewRequest("POST", GetAddr("/accounts/internal"), bytes.NewBuffer(buf))
 	if err != nil {
@@ -276,13 +224,7 @@ func getExternalAccountCmd() cli.Command {
 		Name:  "get",
 		Usage: "get account with id",
 		Action: func(c *cli.Context) error {
-			if len(c.Args()) != 1 {
-				return cli.NewExitError("incorrect number of args", 1)
-			}
-			acc, err := getExternalAccount(c.Args().First())
-			json.NewEncoder(os.Stdout).Encode(acc)
-			return err
-
+			return GetCmd(c, getExternalAccount)
 		},
 	}
 }
@@ -292,18 +234,12 @@ func getInternalAccountCmd() cli.Command {
 		Name:  "get",
 		Usage: "get account with id",
 		Action: func(c *cli.Context) error {
-			if len(c.Args()) != 1 {
-				return cli.NewExitError("incorrect number of args", 1)
-			}
-			acc, err := getInternalAccount(c.Args().First())
-			json.NewEncoder(os.Stdout).Encode(acc)
-			return err
-
+			return GetCmd(c, getInternalAccount)
 		},
 	}
 }
 
-func getExternalAccount(id string) (nacc *model.ExternalAccount, err error) {
+func getExternalAccount(id string) (nacc model.Tabular, err error) {
 	resp, err := http.Get(GetAddr("/accounts/external/" + id))
 	if err != nil {
 		return
@@ -315,7 +251,7 @@ func getExternalAccount(id string) (nacc *model.ExternalAccount, err error) {
 
 }
 
-func getInternalAccount(id string) (nacc *model.InternalAccount, err error) {
+func getInternalAccount(id string) (nacc model.Tabular, err error) {
 	resp, err := http.Get(GetAddr("/accounts/internal/" + id))
 	if err != nil {
 		return

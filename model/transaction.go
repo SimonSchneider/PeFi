@@ -1,26 +1,138 @@
 package model
 
-//import (
-//"encoding/json"
-//"pefi/model/redis"
-//"time"
-//)
+import (
+	"encoding/json"
+	"fmt"
+	"pefi/model/redis"
+	"strconv"
+	"strings"
+	"time"
+)
 
-//type (
-//Transaction struct {
-//Id       int64     `json:"id"`
-//Amount   float64   `json:"amount,number"`
-//Time     time.Time `json:"time"`
-//Sender   Account   `json:"-"`
-//Receiver Account   `json:"-"`
-//Labels   []Label   `json:"labels"`
-//}
+type (
+	Transactions []Transaction
 
-//Loan struct {
-//Transaction
-//payback []Transaction
-//}
-//)
+	Transaction struct {
+		Id         int64     `json:"id"`
+		Time       time.Time `json:"time"`
+		Amount     float64   `json:"amount,number"`
+		SenderId   int64     `json:"sender_id"`
+		ReceiverId int64     `json:"receiver_id"`
+		LabelIds   []int64   `json:"label_ids"`
+	}
+
+	Loan struct {
+		Transaction
+		PaybackIds []int64 `json:"payback_ids"`
+	}
+)
+
+var (
+	transactionHeader = []string{
+		"id",
+		"time",
+		"amount",
+		"sender",
+		"receiver",
+		"labels",
+	}
+)
+
+func (ts *Transactions) Header() (s []string) {
+	return transactionHeader
+}
+
+func (ts *Transactions) Body() (s [][]string) {
+	for _, t := range *ts {
+		s = append(s, t.Table())
+	}
+	return s
+}
+
+func (ts *Transaction) Header() (s []string) {
+	return transactionHeader
+}
+
+func (t *Transaction) Body() (s [][]string) {
+	return [][]string{t.Table()}
+}
+
+func (t *Transaction) Table() (s []string) {
+	s = []string{
+		strconv.Itoa(int(t.Id)),
+		t.Time.Format("2006-01-02"),
+		fmt.Sprintf("%.2f", t.Amount),
+		strconv.Itoa(int(t.SenderId)),
+		strconv.Itoa(int(t.ReceiverId)),
+	}
+	labelIds := []string{}
+	for _, id := range t.LabelIds {
+		labelIds = append(labelIds, strconv.Itoa(int(id)))
+	}
+	s = append(s, strings.Join(labelIds, ","))
+	return s
+}
+
+func (l *Loan) Table() (s []string) {
+	s = l.Transaction.Table()
+	paybackIds := []string{}
+	for _, id := range l.PaybackIds {
+		paybackIds = append(paybackIds, strconv.Itoa(int(id)))
+	}
+	s = append(s, strings.Join(paybackIds, ","))
+	return s
+}
+
+func NewTransaction(t Transaction) (*Transaction, error) {
+	id, err := redis.HIncrBy("unique_ids", "Transaction", 1)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	t.Id = id
+	jt, err := json.Marshal(t)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	redis.HSet("Transaction", strconv.Itoa(int(t.Id)), string(jt))
+	//Commit Transaction
+	return &t, err
+}
+
+func GetTransactions() (ts []Transaction, err error) {
+	vals, err := redis.HGetAll("Transaction")
+	if err != nil {
+		return
+	}
+	for _, val := range vals {
+		t := new(Transaction)
+		if err = json.Unmarshal([]byte(val), t); err != nil {
+			return
+		}
+		ts = append(ts, *t)
+	}
+	return
+}
+
+func GetTransaction(id int64) (nt *Transaction, err error) {
+	val, err := redis.HGet("Transaction", strconv.Itoa(int(id)))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	nt = new(Transaction)
+	err = json.Unmarshal([]byte(val), nt)
+	return
+}
+
+func DelTransaction(id int64) (err error) {
+	err = redis.HDel("Transaction", strconv.Itoa(int(id)))
+	if err != nil {
+		fmt.Println(err)
+	}
+	return
+}
 
 //func (t *Transaction) Commit() error {
 //err := t.Sender.send(t.Amount)

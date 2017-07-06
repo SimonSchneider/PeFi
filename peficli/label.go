@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
 	"net/http"
-	"os"
 	"pefi/model"
 )
 
@@ -56,42 +54,23 @@ func listLabelsCmd() cli.Command {
 		Usage: "print labels",
 		Flags: labLsFlags,
 		Action: func(c *cli.Context) (err error) {
-			labs, err := listLabels()
-			if err != nil {
-				fmt.Println(err)
-				return err
-			}
-			if c.Bool("json") {
-				json.NewEncoder(os.Stdout).Encode(labs)
-				return
-			}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{
-				"id",
-				"name",
-				"desc",
-			})
-			for _, l := range *labs {
-				table.Append(l.Table())
-			}
-			table.Render()
-			return err
+			return ListCmd(c, listLabels)
 		},
 	}
 }
 
-func listLabels() (labs *[]model.Label, err error) {
+func listLabels() (ls model.Tabular, err error) {
 	resp, err := http.Get(GetAddr("/labels"))
 	if err != nil {
 		fmt.Printf("error: %s\n", err)
 		return
 	}
 	defer resp.Body.Close()
-	labs = new([]model.Label)
-	if err = json.NewDecoder(resp.Body).Decode(labs); err != nil {
+	ls = new(model.Labels)
+	if err = json.NewDecoder(resp.Body).Decode(ls); err != nil {
 		return
 	}
-	return
+	return ls, nil
 }
 
 func addLabelCmd() cli.Command {
@@ -100,33 +79,24 @@ func addLabelCmd() cli.Command {
 		Usage: "add label",
 		Flags: labAddFlags,
 		Action: func(c *cli.Context) (err error) {
-			var nlab *model.Label
-			if path := c.String("file"); path != "" {
-				lab := new(model.Label)
-				file, err := os.Open(path)
-				if err != nil {
-					return err
-				}
-				if err = json.NewDecoder(file).Decode(lab); err != nil {
-					return err
-				}
-				nlab, err = addLabel(*lab)
-			} else if c.String("name") != "" {
-				lab := model.Label{
-					Name:        c.String("name"),
-					Description: c.String("description"),
-				}
-				nlab, err = addLabel(lab)
-			} else {
-				return nil
-			}
-			err = json.NewEncoder(os.Stdout).Encode(nlab)
-			return err
+			return AddCmd(
+				c,
+				new(model.Label),
+				createLabel,
+				addLabel,
+			)
 		},
 	}
 }
 
-func addLabel(lab model.Label) (nlab *model.Label, err error) {
+func createLabel(c *cli.Context) (nl model.Tabular, err error) {
+	return &model.Label{
+		Name:        c.String("name"),
+		Description: c.String("description"),
+	}, nil
+}
+
+func addLabel(lab model.Tabular) (nlab model.Tabular, err error) {
 	buf, err := json.Marshal(lab)
 	req, err := http.NewRequest("POST", GetAddr("/labels"), bytes.NewBuffer(buf))
 	if err != nil {
@@ -150,18 +120,12 @@ func getLabelCmd() cli.Command {
 		Name:  "get",
 		Usage: "get label with id",
 		Action: func(c *cli.Context) error {
-			if len(c.Args()) != 1 {
-				return cli.NewExitError("incorrect number of args", 1)
-			}
-			lab, err := getLabel(c.Args().First())
-			json.NewEncoder(os.Stdout).Encode(lab)
-			return err
-
+			return GetCmd(c, getLabel)
 		},
 	}
 }
 
-func getLabel(id string) (nlab *model.Label, err error) {
+func getLabel(id string) (nlab model.Tabular, err error) {
 	resp, err := http.Get(GetAddr("/labels/" + id))
 	if err != nil {
 		return
@@ -178,10 +142,7 @@ func delLabelCmd() cli.Command {
 		Name:  "del",
 		Usage: "delete label with id",
 		Action: func(c *cli.Context) (err error) {
-			if len(c.Args()) != 1 {
-				return cli.NewExitError("incorrect number of args", 1)
-			}
-			return delLabel(c.Args().First())
+			return DelCmd(c, delLabel)
 		},
 	}
 }

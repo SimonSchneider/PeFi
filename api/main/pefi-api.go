@@ -3,15 +3,12 @@ package main
 import (
 	"net/http"
 	"pefi/api"
+	//"pefi/logger"
+	"pefi/router"
 )
 
 func main() {
-	//http.HandleFunc("/add/transaction", api.AddTransaction)
-	//http.HandleFunc("/account/add", api.AddAccount)
-	//http.HandleFunc("/account/get", api.GetAccount)
-	//http.HandleFunc("/account/get/all", api.GetAllAccounts)
-
-	router := api.NewRouter()
+	router := router.NewRouter(api.Routes)
 
 	http.ListenAndServe(":22400", router)
 }

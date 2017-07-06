@@ -52,6 +52,9 @@ func DelLabel(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-	lab, err := model.DelLabel(int64(id))
-	json.NewEncoder(w).Encode(lab)
+	err = model.DelLabel(int64(id))
+	if err != nil {
+		fmt.Println(err)
+	}
+	return
 }

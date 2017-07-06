@@ -1,92 +1,114 @@
 package api
 
-import "net/http"
+import (
+	"pefi/logger"
+	"pefi/router"
+)
 
-type Route struct {
-	Name   string
-	Method string
-	//Input       string
-	//Output      string
-	Pattern     string
-	HandlerFunc http.HandlerFunc
-}
-
-type Routes []Route
-
-var accRoutes = Routes{
-	Route{
-		"Add external accounts",
+//Routes contains the gorilla mux routes of the API
+var Routes = router.Routes{
+	//Account Routes
+	router.Route{
+		"AddExternalAccount",
 		"POST",
 		"/accounts/external",
-		AddExternalAccount,
+		router.Handler(AddExternalAccount,
+			logger.HTTPLogger("Adding")),
 	},
-	Route{
-		"Add internal accounts",
+	router.Route{
+		"AddInternalAccount",
 		"POST",
 		"/accounts/internal",
-		AddInternalAccount,
+		router.Handler(AddInternalAccount,
+			logger.HTTPLogger("Adding")),
 	},
-	Route{
-		"Get list of external accounts",
+	router.Route{
+		"GetExternalAccounts",
 		"GET",
 		"/accounts/external",
 		GetExternalAccounts,
 	},
-	Route{
-		"Get list of internal accounts",
+	router.Route{
+		"GetInternalAccounts",
 		"GET",
 		"/accounts/internal",
 		GetInternalAccounts,
 	},
-	Route{
-		"Get external account with Id",
+	router.Route{
+		"GetExternalAccount",
 		"GET",
 		"/accounts/external/{accountId}",
 		GetExternalAccount,
 	},
-	Route{
-		"Get internal account with Id",
+	router.Route{
+		"GetInternalAccount",
 		"GET",
 		"/accounts/internal/{accountId}",
 		GetInternalAccount,
 	},
-	Route{
-		"Delete external account with Id",
+	router.Route{
+		"DeleteExternalAccount",
 		"DEL",
 		"/accounts/external/{accountId}",
 		DelExternalAccount,
 	},
-	Route{
-		"Delete internal account with Id",
+	router.Route{
+		"DeleteInternalAccount",
 		"DEL",
 		"/accounts/internal/{accountId}",
 		DelInternalAccount,
+		//router.Handler(DelInternalAccount,
+		//logger.HttpLogger),
 	},
-}
-
-var labRoutes = Routes{
-	Route{
-		"Add labels",
+	// Label router.Routers
+	router.Route{
+		"AddLabel",
 		"POST",
 		"/labels",
 		AddLabel,
 	},
-	Route{
-		"Get list of labels",
+	router.Route{
+		"GetLabels",
 		"GET",
 		"/labels",
-		GetLabels,
+		router.Handler(GetLabels,
+			logger.HTTPLogger("test2")),
 	},
-	Route{
-		"Get label with Id",
+	router.Route{
+		"GetLabel",
 		"GET",
 		"/labels/{labelId}",
 		GetLabel,
 	},
-	Route{
-		"Delete label with Id",
+	router.Route{
+		"DeleteLabel",
 		"DEL",
 		"/labels/{labelId}",
 		DelLabel,
+	},
+	// Transaction router.Routers
+	router.Route{
+		"AddTransaction",
+		"POST",
+		"/transactions",
+		AddTransaction,
+	},
+	router.Route{
+		"GetTransactions",
+		"GET",
+		"/transactions",
+		GetTransactions,
+	},
+	router.Route{
+		"GetTransaction",
+		"GET",
+		"/transactions/{transactionId}",
+		GetTransaction,
+	},
+	router.Route{
+		"DeleteTransaction",
+		"DEL",
+		"/transactions/{transactionId}",
+		DelTransaction,
 	},
 }
