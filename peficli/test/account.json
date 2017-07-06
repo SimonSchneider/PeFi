@@ -1,0 +1,54 @@
+{
+	"ia": [
+		{
+			"name": "Simon",
+			"description": "Handelsbanken kort konto",
+			"Balance": -21000.92,
+			"labels": [
+				{
+					"id":"lji3o",
+					"name":"handling",
+					"description":"stuff i buy"
+				},
+				{
+					"id":"ljio23o",
+					"name":"others",
+					"description":"other stuff"
+				}]
+	
+		}],
+	"ea": [
+		{
+			"name": "Nytt",
+			"description": "ica handlingskonto",
+			"account_type": "external",
+			"labels": [
+			{
+				"id":"lji3o",
+				"name":"handling",
+				"description":"stuff i buy"
+			},
+			{
+				"id":"ljio23o",
+				"name":"others",
+				"description":"other stuff"
+			}]
+		},
+		{
+			"name": "Nytt2",
+			"description": "ica handlingskonto",
+			"account_type": "external",
+			"labels": [
+			{
+				"id":"lji3o",
+				"name":"handling",
+				"description":"stuff i buy"
+			},
+			{
+				"id":"ljio23o",
+				"name":"others",
+				"description":"other stuff"
+			}]
+		}
+	]
+}

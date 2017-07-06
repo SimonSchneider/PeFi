@@ -20,7 +20,6 @@ type (
 )
 
 func dailyHandel(w http.ResponseWriter, r *http.Request) {
-	//id := r.URL.Path[len("/daily/"):]
 	as, err := getAccounts()
 	if err != nil {
 		fmt.Println(err)
@@ -105,10 +104,10 @@ func getTransactions() (ts []*model.Transaction) {
 
 func main() {
 	http.HandleFunc("/daily", dailyHandel)
-	//http.HandleFunc("/api/getia", getAccounts)
 	http.HandleFunc("/api/add/transaction", api.AddTransaction)
 	http.HandleFunc("/api/add/account", api.AddAccount)
 	http.HandleFunc("/api/get/all/accounts", api.GetAllAccounts)
+	http.HandleFunc("/api/get/account", api.GetAccount)
 
 	as, err := getAccounts()
 	if err != nil {
