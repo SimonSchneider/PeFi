@@ -14,7 +14,7 @@ import (
 var (
 	accAddFlags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "file",
+			Name:  "file, f",
 			Usage: "add from file",
 		},
 		cli.StringFlag{
@@ -32,6 +32,12 @@ var (
 		cli.Float64Flag{
 			Name:  "balance, b",
 			Usage: "set the balance of the account",
+		},
+	}
+	accLsFlags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "json, j",
+			Usage: "print in json format",
 		},
 	}
 )
@@ -78,10 +84,15 @@ func listExternalAccountsCmd() cli.Command {
 	return cli.Command{
 		Name:  "ls",
 		Usage: "print accounts",
+		Flags: accLsFlags,
 		Action: func(c *cli.Context) (err error) {
 			accs, err := listExternalAccounts()
 			if err != nil {
 				return err
+			}
+			if c.Bool("json") {
+				json.NewEncoder(os.Stdout).Encode(accs)
+				return
 			}
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"id", "name", "description", "labels"})
@@ -98,16 +109,25 @@ func listInternalAccountsCmd() cli.Command {
 	return cli.Command{
 		Name:  "ls",
 		Usage: "print accounts",
+		Flags: accLsFlags,
 		Action: func(c *cli.Context) (err error) {
 			accs, err := listInternalAccounts()
 			if err != nil {
 				return err
 			}
+			if c.Bool("json") {
+				json.NewEncoder(os.Stdout).Encode(accs)
+				return
+			}
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"id", "name", "description", "labels", "balance"})
+			var total float64
 			for _, a := range *accs {
 				table.Append(a.Table())
+				total += a.Balance
 			}
+			stotal := fmt.Sprintf("%.2f", total)
+			table.SetFooter([]string{"", "", "", "total", stotal})
 			table.Render()
 			return err
 		},
@@ -228,7 +248,7 @@ func addExternalAccount(acc model.ExternalAccount) (nacc *model.ExternalAccount,
 	}
 	defer resp.Body.Close()
 	nacc = new(model.ExternalAccount)
-	json.NewDecoder(resp.Body).Decode(nacc)
+	err = json.NewDecoder(resp.Body).Decode(nacc)
 	return
 }
 
@@ -247,7 +267,7 @@ func addInternalAccount(acc model.InternalAccount) (nacc *model.InternalAccount,
 	}
 	defer resp.Body.Close()
 	nacc = new(model.InternalAccount)
-	json.NewDecoder(resp.Body).Decode(nacc)
+	err = json.NewDecoder(resp.Body).Decode(nacc)
 	return
 }
 

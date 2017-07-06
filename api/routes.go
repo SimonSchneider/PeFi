@@ -13,7 +13,7 @@ type Route struct {
 
 type Routes []Route
 
-var routes = Routes{
+var accRoutes = Routes{
 	Route{
 		"Add external accounts",
 		"POST",
@@ -61,5 +61,32 @@ var routes = Routes{
 		"DEL",
 		"/accounts/internal/{accountId}",
 		DelInternalAccount,
+	},
+}
+
+var labRoutes = Routes{
+	Route{
+		"Add labels",
+		"POST",
+		"/labels",
+		AddLabel,
+	},
+	Route{
+		"Get list of labels",
+		"GET",
+		"/labels",
+		GetLabels,
+	},
+	Route{
+		"Get label with Id",
+		"GET",
+		"/labels/{labelId}",
+		GetLabel,
+	},
+	Route{
+		"Delete label with Id",
+		"DEL",
+		"/labels/{labelId}",
+		DelLabel,
 	},
 }

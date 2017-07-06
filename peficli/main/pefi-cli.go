@@ -33,6 +33,7 @@ func main() {
 		peficli.AccountCommand(),
 		peficli.TransactionCommand(),
 		peficli.LoginCommand(),
+		peficli.LabelCommand(),
 	}
 	app.Run(os.Args)
 }
