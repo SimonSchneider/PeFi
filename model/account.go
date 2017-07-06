@@ -3,20 +3,15 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"io"
 	"pefi/model/redis"
 	"strconv"
+	"strings"
 )
 
 type (
 	Account interface {
 		Table() []string
-	}
-
-	Accounts struct {
-		InternalAccounts []InternalAccount `json:"ia"`
-		ExternalAccounts []ExternalAccount `json:"ea"`
 	}
 
 	ExternalAccount struct {
@@ -32,32 +27,6 @@ type (
 	}
 )
 
-//Todo change to proper format type
-func (a *Accounts) Print(w io.Writer, format string) {
-	if format == "json" {
-		json.NewEncoder(w).Encode(a)
-	} else if format == "table" {
-		fmt.Println("External Accounts")
-		extTable := tablewriter.NewWriter(w)
-		extTable.SetHeader([]string{"id", "name", "description"})
-		for _, a := range a.ExternalAccounts {
-			extTable.Append(a.Table())
-		}
-		extTable.Render()
-		fmt.Println("Internal Accounts")
-		intSum := 0.0
-		intTable := tablewriter.NewWriter(w)
-		intTable.SetHeader([]string{"id", "name", "description", "balance"})
-		for _, a := range a.InternalAccounts {
-			intTable.Append(a.Table())
-			intSum += a.Balance
-		}
-		strSum := fmt.Sprintf("%.2f", intSum)
-		intTable.SetFooter([]string{"", "", "Total", strSum})
-		intTable.Render()
-	}
-}
-
 func (a *InternalAccount) Table() (s []string) {
 	s = a.ExternalAccount.Table()
 	s = append(s, fmt.Sprintf("%.2f", a.Balance))
@@ -70,6 +39,11 @@ func (a *ExternalAccount) Table() (s []string) {
 		a.Name,
 		a.Description,
 	}
+	labelIds := []string{}
+	for _, id := range a.LabelIds {
+		labelIds = append(labelIds, strconv.Itoa(int(id)))
+	}
+	s = append(s, strings.Join(labelIds, ","))
 	return s
 }
 
@@ -103,23 +77,55 @@ func GetExternalAccounts() (accs []ExternalAccount, err error) {
 	return
 }
 
-// Returns the account that has the ID
-func GetAccounts(ids []int64) (a Accounts, err error) {
-	for _, id := range ids {
-		var tmp string
-		if tmp, err = redis.HGet("InternalAccount", string(id)); err == nil {
-			ta := new(InternalAccount)
-			if err = json.Unmarshal([]byte(tmp), ta); err != nil {
-				return
-			}
-			a.InternalAccounts = append(a.InternalAccounts, *ta)
-		} else if tmp, err = redis.HGet("ExternalAccount", string(id)); err == nil {
-			ta := new(ExternalAccount)
-			if err = json.Unmarshal([]byte(tmp), ta); err != nil {
-				return
-			}
-			a.ExternalAccounts = append(a.ExternalAccounts, *ta)
+func GetInternalAccounts() (accs []InternalAccount, err error) {
+	vals, err := redis.HGetAll("InternalAccount")
+	if err != nil {
+		return
+	}
+	for _, val := range vals {
+		a := new(InternalAccount)
+		if err = json.Unmarshal([]byte(val), a); err != nil {
+			return
 		}
+		accs = append(accs, *a)
+	}
+	return
+}
+
+func GetExternalAccount(id int64) (acc *ExternalAccount, err error) {
+	val, err := redis.HGet("ExternalAccount", strconv.Itoa(int(id)))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	acc = new(ExternalAccount)
+	err = json.Unmarshal([]byte(val), acc)
+	return
+}
+
+func GetInternalAccount(id int64) (acc *InternalAccount, err error) {
+	val, err := redis.HGet("InternalAccount", strconv.Itoa(int(id)))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	acc = new(InternalAccount)
+	err = json.Unmarshal([]byte(val), acc)
+	return
+}
+
+func DelExternalAccount(id int64) (err error) {
+	err = redis.HDel("ExternalAccount", strconv.Itoa(int(id)))
+	if err != nil {
+		fmt.Println(err)
+	}
+	return
+}
+
+func DelInternalAccount(id int64) (err error) {
+	err = redis.HDel("InternalAccount", strconv.Itoa(int(id)))
+	if err != nil {
+		fmt.Println(err)
 	}
 	return
 }
@@ -141,7 +147,7 @@ func NewExternalAccount(data io.Reader) (a *ExternalAccount, err error) {
 	if err != nil {
 		return
 	}
-	redis.HSet("ExternalAccount", string(a.Id), string(ma))
+	redis.HSet("ExternalAccount", strconv.Itoa(int(a.Id)), string(ma))
 	return
 }
 
@@ -162,50 +168,6 @@ func NewInternalAccount(data io.Reader) (a *InternalAccount, err error) {
 	if err != nil {
 		return
 	}
-	redis.HSet("InternalAccount", string(a.Id), string(ma))
-	return
-}
-
-func GetAllAccounts() (as Accounts, err error) {
-	ias, err := getAllInternalAccounts()
-	eas, err := getAllExternalAccounts()
-	as.InternalAccounts = ias
-	as.ExternalAccounts = eas
-	return
-}
-
-func getAllInternalAccounts() (as []InternalAccount, err error) {
-	vals, err := redis.HGetAll("InternalAccount")
-	if err != nil {
-		return
-	}
-	for _, val := range vals {
-		a := new(InternalAccount)
-		if err = json.Unmarshal([]byte(val), a); err != nil {
-			return
-		}
-		as = append(as, *a)
-	}
-	return
-}
-
-func getAllExternalAccounts() (as []ExternalAccount, err error) {
-	vals, err := redis.HGetAll("ExternalAccount")
-	if err != nil {
-		return
-	}
-	for _, val := range vals {
-		a := new(ExternalAccount)
-		if err = json.Unmarshal([]byte(val), a); err != nil {
-			return
-		}
-		as = append(as, *a)
-	}
-	return
-}
-
-func DelAccount(id int64) (err error) {
-	err = redis.HDel("InternalAccount", string(id))
-	err = redis.HDel("ExternalAccount", string(id))
+	redis.HSet("InternalAccount", strconv.Itoa(int(a.Id)), string(ma))
 	return
 }

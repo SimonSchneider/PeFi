@@ -42,12 +42,24 @@ var routes = Routes{
 		"Get external account with Id",
 		"GET",
 		"/accounts/external/{accountId}",
-		GetInternalAccount,
+		GetExternalAccount,
 	},
 	Route{
 		"Get internal account with Id",
 		"GET",
 		"/accounts/internal/{accountId}",
 		GetInternalAccount,
+	},
+	Route{
+		"Delete external account with Id",
+		"DEL",
+		"/accounts/external/{accountId}",
+		DelExternalAccount,
+	},
+	Route{
+		"Delete internal account with Id",
+		"DEL",
+		"/accounts/internal/{accountId}",
+		DelInternalAccount,
 	},
 }
