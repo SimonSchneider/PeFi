@@ -34,6 +34,7 @@ func ToTable(t model.Tabular, w io.Writer) {
 	table := tablewriter.NewWriter(w)
 	table.SetHeader(t.Header())
 	table.AppendBulk(t.Body())
+	table.SetFooter(t.Footer())
 	table.Render()
 }
 
@@ -78,7 +79,7 @@ func GetCmd(c *cli.Context, f func(string) (model.Tabular, error)) error {
 	return nil
 }
 
-//DelCmd Meta for deleting against the cmd
+//DelCmd Meta for deleting against the API
 func DelCmd(c *cli.Context, f func(string) error) error {
 	//out := os.Stdout
 	if len(c.Args()) != 1 {
@@ -91,6 +92,7 @@ func DelCmd(c *cli.Context, f func(string) error) error {
 	return nil
 }
 
+//AddCmd Meta for adding against the API
 func AddCmd(c *cli.Context, t model.Tabular, cF func(*cli.Context) (model.Tabular, error), f func(model.Tabular) (model.Tabular, error)) (err error) {
 	out := os.Stdout
 	if path := c.String("file"); path != "" {

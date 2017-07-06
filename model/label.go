@@ -37,12 +37,20 @@ func (ls *Labels) Body() (s [][]string) {
 	return s
 }
 
+func (ls *Labels) Footer() (s []string) {
+	return []string{}
+}
+
 func (l *Label) Header() (s []string) {
 	return labelHeader
 }
 
 func (l *Label) Body() (s [][]string) {
 	return [][]string{l.Table()}
+}
+
+func (l *Label) Footer() (s []string) {
+	return []string{}
 }
 
 func (l *Label) Table() (s []string) {

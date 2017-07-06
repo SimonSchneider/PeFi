@@ -35,12 +35,29 @@ func (is *InternalAccounts) Body() (s [][]string) {
 	return s
 }
 
+func (is *InternalAccounts) Footer() (s []string) {
+	sum := 0.0
+	for _, i := range *is {
+		sum += i.Balance
+	}
+	for i := 0; i < len(internalAccountHeader); i++ {
+		s = append(s, "")
+	}
+	s[len(s)-1] = fmt.Sprintf("%.2f", sum)
+	s[len(s)-2] = "Total"
+	return s
+}
+
 func (i *InternalAccount) Header() (s []string) {
 	return internalAccountHeader
 }
 
 func (i *InternalAccount) Body() (s [][]string) {
 	return [][]string{i.Table()}
+}
+
+func (i *InternalAccount) Footer() (s []string) {
+	return []string{}
 }
 
 func (a *InternalAccount) Table() (s []string) {

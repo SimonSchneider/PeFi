@@ -40,12 +40,20 @@ func (es *ExternalAccounts) Body() (s [][]string) {
 	return s
 }
 
+func (es *ExternalAccounts) Footer() (s []string) {
+	return []string{}
+}
+
 func (e *ExternalAccount) Header() (s []string) {
 	return externalAccountHeader
 }
 
 func (e *ExternalAccount) Body() (s [][]string) {
 	return [][]string{e.Table()}
+}
+
+func (e *ExternalAccount) Footer() (s []string) {
+	return []string{}
 }
 
 func (a *ExternalAccount) Table() (s []string) {

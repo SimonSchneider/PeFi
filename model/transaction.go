@@ -49,12 +49,29 @@ func (ts *Transactions) Body() (s [][]string) {
 	return s
 }
 
+func (ts *Transactions) Footer() (s []string) {
+	sum := 0.0
+	for _, t := range *ts {
+		sum += t.Amount
+	}
+	for i := 0; i < len(transactionHeader); i++ {
+		s = append(s, "")
+	}
+	s[1] = "Total"
+	s[2] = fmt.Sprintf("%.2f", sum)
+	return s
+}
+
 func (ts *Transaction) Header() (s []string) {
 	return transactionHeader
 }
 
 func (t *Transaction) Body() (s [][]string) {
 	return [][]string{t.Table()}
+}
+
+func (t *Transaction) Footer() (s []string) {
+	return []string{}
 }
 
 func (t *Transaction) Table() (s []string) {
