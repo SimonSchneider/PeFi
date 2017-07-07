@@ -1,4 +1,4 @@
-package peficli
+package main
 
 import (
 	"fmt"
@@ -6,11 +6,7 @@ import (
 	"net/http"
 )
 
-func PingFlags() []cli.Flag {
-	return nil
-}
-
-func PingCommand() cli.Command {
+func pingCommand() cli.Command {
 	return cli.Command{
 		Name:    "ping",
 		Aliases: []string{"p"},
@@ -18,13 +14,12 @@ func PingCommand() cli.Command {
 		Action: func(c *cli.Context) error {
 			return pingServer()
 		},
-		Flags: PingFlags(),
 	}
 }
 
 func pingServer() error {
 	fmt.Printf("pinging server at: %s:%d - ", Conn.Host, Conn.Port)
-	_, err := http.Get(GetAddr("/account/get/all"))
+	_, err := http.Get(GetAddr("/"))
 	if err != nil {
 		fmt.Println("Fail")
 		errors := fmt.Sprintf("Couldnt conect to server:\n%s", err)

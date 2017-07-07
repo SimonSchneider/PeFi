@@ -1,4 +1,4 @@
-package peficli
+package main
 
 import (
 	"github.com/urfave/cli"
@@ -13,7 +13,7 @@ type (
 )
 
 //LoginCommand return the urfave.cli command of the transaction
-func LoginCommand() cli.Command {
+func loginCommand() cli.Command {
 	var ()
 
 	subcmds := []cli.Command{
@@ -39,7 +39,6 @@ func LoginCommand() cli.Command {
 	}
 	return cli.Command{
 		Name:        "login",
-		Aliases:     []string{"l"},
 		Usage:       "login interface",
 		Subcommands: subcmds,
 	}
