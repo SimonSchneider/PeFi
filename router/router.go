@@ -6,8 +6,7 @@ import (
 )
 
 type (
-	//HttpDecorator func(...interface{}) func(http.HandlerFunc) http.HandlerFunc
-	HTTPDecorator func(http.HandlerFunc) http.HandlerFunc
+	Adaptor func(http.HandlerFunc) http.HandlerFunc
 
 	Route struct {
 		Name        string
@@ -19,9 +18,10 @@ type (
 	Routes []Route
 )
 
-func Handler(h http.HandlerFunc, decorators ...HTTPDecorator) http.HandlerFunc {
-	for i := len(decorators) - 1; i >= 0; i-- {
-		h = decorators[i](h)
+//Adds the Adaptors to the http.Handler
+func Handler(h http.HandlerFunc, adaptors ...Adaptor) http.HandlerFunc {
+	for i := len(adaptors) - 1; i >= 0; i-- {
+		h = adaptors[i](h)
 	}
 	return h
 }

@@ -1,54 +1,76 @@
 package model
 
 import (
-	//"pefi/model/db"
 	"encoding/json"
-	//"pefi/model/redis"
+	"errors"
+	"fmt"
+	"pefi/model/redis"
+	"strconv"
 )
-
-var root_node = root{}
 
 type (
-	root struct {
-		Children []Categorie
-	}
-
 	Categorie struct {
-		Id       int64       `json:"id"`
-		Name     string      `json:"name"`
-		Children []Categorie `json:"children"`
+		Id          int64   `json:"id"`
+		Name        string  `json:"name"`
+		Description string  `json:"description"`
+		LabelIds    []int64 `json:"label_ids"`
+		ChildrenIds []int64 `json:"children_ids"`
 	}
 )
 
-func GetCategorie(id string) (c *Categorie, err error) {
+func GetCategories() (interface{}, error) {
+	vals, err := redis.HGetAll("Categorie")
+	if err != nil {
+		return nil, err
+	}
+	var cs []Categorie
+	for _, val := range vals {
+		c := new(Categorie)
+		if err = json.Unmarshal([]byte(val), c); err != nil {
+			return nil, err
+		}
+		cs = append(cs, *c)
+	}
+	return &cs, nil
+}
+
+func GetCategorie(id int64) (c interface{}, err error) {
+	val, err := redis.HGet("Categorie", strconv.Itoa(int(id)))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	c = new(Categorie)
-	//rc, err := redis.GetClient()
-	//data, err := rc.Get("categorie:" + string(id)).Result()
-	//if err = json.Unmarshal([]byte(data), c); err != nil {
-	//return
-	//}
+	err = json.Unmarshal([]byte(val), c)
 	return
 }
 
-func CreateCategorie(data string) (c *Categorie, err error) {
-	c = new(Categorie)
-	if err = json.Unmarshal([]byte(data), c); err != nil {
+func DelCategorie(id int64) (err error) {
+	err = redis.HDel("Categorie", strconv.Itoa(int(id)))
+	if err != nil {
+		fmt.Println(err)
+	}
+	return
+}
+
+func NewCategorie(in interface{}) (nc interface{}, err error) {
+	c, ok := in.(*Categorie)
+	if !ok {
+		return nil, errors.New("couldnt cast")
+	}
+	fmt.Println(c)
+	fmt.Println("testing")
+	id, err := redis.HIncrBy("unique_ids", "Categorie", 1)
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
-	//rc, err := redis.GetClient()
-	//add to database and redis
-	//replace by database insert to get id
-	//id, err := rc.HIncrBy("unique_ids", "categorie", 1).Result()
-	//if err != nil {
-	//return
-	//}
-	//c.Id = id
-	//output, err := json.Marshal(c)
-	//if err != nil {
-	//return
-	//}
-	//if err = rc.Set("categorie:"+string(id), output, 0).Err(); err != nil {
-	//return
-	//}
-	return
+	c.Id = id
+	jc, err := json.Marshal(c)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	redis.HSet("Categorie", strconv.Itoa(int(c.Id)), string(jc))
+	return &c, err
 }

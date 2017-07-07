@@ -17,7 +17,7 @@ func (w *loggingResponseWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-func HTTPLogger(info string) router.HTTPDecorator {
+func HTTPLogger(info string) router.Adaptor {
 	return func(inner http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			loggingRW := &loggingResponseWriter{

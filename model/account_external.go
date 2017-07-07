@@ -2,16 +2,13 @@ package model
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
 	"pefi/model/redis"
 	"strconv"
-	"strings"
 )
 
 type (
-	ExternalAccounts []ExternalAccount
-
 	ExternalAccount struct {
 		Id          int64   `json:"id"`
 		Name        string  `json:"name"`
@@ -20,72 +17,23 @@ type (
 	}
 )
 
-var (
-	externalAccountHeader = []string{
-		"id",
-		"name",
-		"description",
-		"labels",
-	}
-)
-
-func (es *ExternalAccounts) Header() (s []string) {
-	return externalAccountHeader
-}
-
-func (es *ExternalAccounts) Body() (s [][]string) {
-	for _, e := range *es {
-		s = append(s, e.Table())
-	}
-	return s
-}
-
-func (es *ExternalAccounts) Footer() (s []string) {
-	return []string{}
-}
-
-func (e *ExternalAccount) Header() (s []string) {
-	return externalAccountHeader
-}
-
-func (e *ExternalAccount) Body() (s [][]string) {
-	return [][]string{e.Table()}
-}
-
-func (e *ExternalAccount) Footer() (s []string) {
-	return []string{}
-}
-
-func (a *ExternalAccount) Table() (s []string) {
-	s = []string{
-		strconv.Itoa(int(a.Id)),
-		a.Name,
-		a.Description,
-	}
-	labelIds := []string{}
-	for _, id := range a.LabelIds {
-		labelIds = append(labelIds, strconv.Itoa(int(id)))
-	}
-	s = append(s, strings.Join(labelIds, ","))
-	return s
-}
-
-func GetExternalAccounts() (accs []ExternalAccount, err error) {
+func GetExternalAccounts() (interface{}, error) {
 	vals, err := redis.HGetAll("ExternalAccount")
 	if err != nil {
-		return
+		return nil, err
 	}
+	var accs []ExternalAccount
 	for _, val := range vals {
 		a := new(ExternalAccount)
 		if err = json.Unmarshal([]byte(val), a); err != nil {
-			return
+			return nil, err
 		}
 		accs = append(accs, *a)
 	}
-	return
+	return &accs, nil
 }
 
-func GetExternalAccount(id int64) (acc *ExternalAccount, err error) {
+func GetExternalAccount(id int64) (acc interface{}, err error) {
 	val, err := redis.HGet("ExternalAccount", strconv.Itoa(int(id)))
 	if err != nil {
 		fmt.Println(err)
@@ -105,14 +53,13 @@ func DelExternalAccount(id int64) (err error) {
 }
 
 //NewExternalAccount create a new External Account and return it
-func NewExternalAccount(data io.Reader) (a *ExternalAccount, err error) {
-	a = new(ExternalAccount)
+func NewExternalAccount(in interface{}) (na interface{}, err error) {
+	a, ok := in.(*ExternalAccount)
+	if !ok {
+		return nil, errors.New("couldnt cast")
+	}
 	id, err := redis.HIncrBy("unique_ids", "Account", 1)
 	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	if err = json.NewDecoder(data).Decode(a); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -122,5 +69,5 @@ func NewExternalAccount(data io.Reader) (a *ExternalAccount, err error) {
 		return
 	}
 	redis.HSet("ExternalAccount", strconv.Itoa(int(a.Id)), string(ma))
-	return
+	return &a, err
 }

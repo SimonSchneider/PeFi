@@ -7,7 +7,59 @@ import (
 	"github.com/urfave/cli"
 	"net/http"
 	"pefi/model"
+	"strconv"
 )
+
+type (
+	labels []label
+
+	label struct {
+		model.Label
+	}
+)
+
+var (
+	labelHeader = []string{
+		"id",
+		"name",
+		"desc",
+	}
+)
+
+func (ls *labels) Header() (s []string) {
+	return labelHeader
+}
+
+func (ls *labels) Body() (s [][]string) {
+	for _, l := range *ls {
+		s = append(s, l.Table())
+	}
+	return s
+}
+
+func (ls *labels) Footer() (s []string) {
+	return []string{}
+}
+
+func (l *label) Header() (s []string) {
+	return labelHeader
+}
+
+func (l *label) Body() (s [][]string) {
+	return [][]string{l.Table()}
+}
+
+func (l *label) Footer() (s []string) {
+	return []string{}
+}
+
+func (l *label) Table() (s []string) {
+	return []string{
+		strconv.Itoa(int(l.Id)),
+		l.Name,
+		l.Description,
+	}
+}
 
 var (
 	labAddFlags = []cli.Flag{
@@ -66,7 +118,7 @@ func listLabels() (ls model.Tabular, err error) {
 		return
 	}
 	defer resp.Body.Close()
-	ls = new(model.Labels)
+	ls = new(labels)
 	if err = json.NewDecoder(resp.Body).Decode(ls); err != nil {
 		return
 	}
@@ -81,7 +133,7 @@ func addLabelCmd() cli.Command {
 		Action: func(c *cli.Context) (err error) {
 			return AddCmd(
 				c,
-				new(model.Label),
+				new(label),
 				createLabel,
 				addLabel,
 			)
@@ -90,9 +142,11 @@ func addLabelCmd() cli.Command {
 }
 
 func createLabel(c *cli.Context) (nl model.Tabular, err error) {
-	return &model.Label{
-		Name:        c.String("name"),
-		Description: c.String("description"),
+	return &label{
+		Label: model.Label{
+			Name:        c.String("name"),
+			Description: c.String("description"),
+		},
 	}, nil
 }
 
@@ -110,7 +164,7 @@ func addLabel(lab model.Tabular) (nlab model.Tabular, err error) {
 		return
 	}
 	defer resp.Body.Close()
-	nlab = new(model.Label)
+	nlab = new(label)
 	err = json.NewDecoder(resp.Body).Decode(nlab)
 	return nlab, err
 }
@@ -131,7 +185,7 @@ func getLabel(id string) (nlab model.Tabular, err error) {
 		return
 	}
 	defer resp.Body.Close()
-	nlab = new(model.Label)
+	nlab = new(label)
 	err = json.NewDecoder(resp.Body).Decode(nlab)
 	return
 

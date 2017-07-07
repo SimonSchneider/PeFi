@@ -7,8 +7,81 @@ import (
 	"github.com/urfave/cli"
 	"net/http"
 	"pefi/model"
+	"strconv"
+	"strings"
 	"time"
 )
+
+type (
+	transactions []transaction
+
+	transaction struct {
+		model.Transaction
+	}
+)
+
+var (
+	transactionHeader = []string{
+		"id",
+		"time",
+		"amount",
+		"sender",
+		"receiver",
+		"labels",
+	}
+)
+
+func (ts *transactions) Header() (s []string) {
+	return transactionHeader
+}
+
+func (ts *transactions) Body() (s [][]string) {
+	for _, t := range *ts {
+		s = append(s, t.Table())
+	}
+	return s
+}
+
+func (ts *transactions) Footer() (s []string) {
+	sum := 0.0
+	for _, t := range *ts {
+		sum += t.Amount
+	}
+	for i := 0; i < len(transactionHeader); i++ {
+		s = append(s, "")
+	}
+	s[1] = "Total"
+	s[2] = fmt.Sprintf("%.2f", sum)
+	return s
+}
+
+func (ts *transaction) Header() (s []string) {
+	return transactionHeader
+}
+
+func (t *transaction) Body() (s [][]string) {
+	return [][]string{t.Table()}
+}
+
+func (t *transaction) Footer() (s []string) {
+	return []string{}
+}
+
+func (t *transaction) Table() (s []string) {
+	s = []string{
+		strconv.Itoa(int(t.Id)),
+		t.Time.Format("2006-01-02"),
+		fmt.Sprintf("%.2f", t.Amount),
+		strconv.Itoa(int(t.SenderId)),
+		strconv.Itoa(int(t.ReceiverId)),
+	}
+	labelIds := []string{}
+	for _, id := range t.LabelIds {
+		labelIds = append(labelIds, strconv.Itoa(int(id)))
+	}
+	s = append(s, strings.Join(labelIds, ","))
+	return s
+}
 
 var (
 	traAddFlags = []cli.Flag{
@@ -80,7 +153,7 @@ func listTransactions() (ts model.Tabular, err error) {
 		return
 	}
 	defer resp.Body.Close()
-	ts = new(model.Transactions)
+	ts = new(transactions)
 	if err = json.NewDecoder(resp.Body).Decode(ts); err != nil {
 		return
 	}
@@ -95,7 +168,7 @@ func addTransactionCmd() cli.Command {
 		Action: func(c *cli.Context) (err error) {
 			return AddCmd(
 				c,
-				new(model.Transaction),
+				new(transaction),
 				createTransaction,
 				addTransaction,
 			)
@@ -108,12 +181,14 @@ func createTransaction(c *cli.Context) (t model.Tabular, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return &model.Transaction{
-		Time:       timeT,
-		Amount:     c.Float64("amount"),
-		SenderId:   c.Int64("sender"),
-		ReceiverId: c.Int64("receiver"),
-		LabelIds:   c.Int64Slice("labels"),
+	return &transaction{
+		Transaction: model.Transaction{
+			Time:       timeT,
+			Amount:     c.Float64("amount"),
+			SenderId:   c.Int64("sender"),
+			ReceiverId: c.Int64("receiver"),
+			LabelIds:   c.Int64Slice("labels"),
+		},
 	}, nil
 }
 
@@ -131,7 +206,7 @@ func addTransaction(t model.Tabular) (nt model.Tabular, err error) {
 		return
 	}
 	defer resp.Body.Close()
-	nt = new(model.Transaction)
+	nt = new(transaction)
 	err = json.NewDecoder(resp.Body).Decode(nt)
 	return nt, err
 }
@@ -152,7 +227,7 @@ func getTransaction(id string) (nt model.Tabular, err error) {
 		return
 	}
 	defer resp.Body.Close()
-	nt = new(model.Transaction)
+	nt = new(transaction)
 	err = json.NewDecoder(resp.Body).Decode(nt)
 	return
 

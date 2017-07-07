@@ -1,114 +1,54 @@
-package api
+package main
 
 import (
-	"pefi/logger"
-	"pefi/router"
+	"pefi/model"
 )
 
-//Routes contains the gorilla mux routes of the API
-var Routes = router.Routes{
-	//Account Routes
-	router.Route{
-		"AddExternalAccount",
-		"POST",
-		"/accounts/external",
-		router.Handler(AddExternalAccount,
-			logger.HTTPLogger("Adding")),
+//The Routes of the API
+var Routes = createRoutes([]route{
+	route{
+		name: "categories",
+		handlers: apiHandlers{
+			gets: mwGets(model.GetCategories),
+			get:  mwGet(model.GetCategorie),
+			add:  mwAdd(new(model.Categorie), model.NewCategorie),
+			del:  mwDel(model.DelCategorie),
+		},
 	},
-	router.Route{
-		"AddInternalAccount",
-		"POST",
-		"/accounts/internal",
-		router.Handler(AddInternalAccount,
-			logger.HTTPLogger("Adding")),
+	route{
+		name: "labels",
+		handlers: apiHandlers{
+			gets: mwGets(model.GetLabels),
+			get:  mwGet(model.GetLabel),
+			add:  mwAdd(new(model.Label), model.NewLabel),
+			del:  mwDel(model.DelLabel),
+		},
 	},
-	router.Route{
-		"GetExternalAccounts",
-		"GET",
-		"/accounts/external",
-		GetExternalAccounts,
+	route{
+		name: "accounts/external",
+		handlers: apiHandlers{
+			gets: mwGets(model.GetExternalAccounts),
+			get:  mwGet(model.GetExternalAccount),
+			add:  mwAdd(new(model.ExternalAccount), model.NewExternalAccount),
+			del:  mwDel(model.DelExternalAccount),
+		},
 	},
-	router.Route{
-		"GetInternalAccounts",
-		"GET",
-		"/accounts/internal",
-		GetInternalAccounts,
+	route{
+		name: "accounts/internal",
+		handlers: apiHandlers{
+			gets: mwGets(model.GetInternalAccounts),
+			get:  mwGet(model.GetInternalAccount),
+			add:  mwAdd(new(model.InternalAccount), model.NewInternalAccount),
+			del:  mwDel(model.DelInternalAccount),
+		},
 	},
-	router.Route{
-		"GetExternalAccount",
-		"GET",
-		"/accounts/external/{accountId}",
-		GetExternalAccount,
+	route{
+		name: "transactions",
+		handlers: apiHandlers{
+			gets: mwGets(model.GetTransactions),
+			get:  mwGet(model.GetTransaction),
+			add:  mwAdd(new(model.Transaction), model.NewTransaction),
+			del:  mwDel(model.DelTransaction),
+		},
 	},
-	router.Route{
-		"GetInternalAccount",
-		"GET",
-		"/accounts/internal/{accountId}",
-		GetInternalAccount,
-	},
-	router.Route{
-		"DeleteExternalAccount",
-		"DEL",
-		"/accounts/external/{accountId}",
-		DelExternalAccount,
-	},
-	router.Route{
-		"DeleteInternalAccount",
-		"DEL",
-		"/accounts/internal/{accountId}",
-		DelInternalAccount,
-		//router.Handler(DelInternalAccount,
-		//logger.HttpLogger),
-	},
-	// Label router.Routers
-	router.Route{
-		"AddLabel",
-		"POST",
-		"/labels",
-		AddLabel,
-	},
-	router.Route{
-		"GetLabels",
-		"GET",
-		"/labels",
-		router.Handler(GetLabels,
-			logger.HTTPLogger("test2")),
-	},
-	router.Route{
-		"GetLabel",
-		"GET",
-		"/labels/{labelId}",
-		GetLabel,
-	},
-	router.Route{
-		"DeleteLabel",
-		"DEL",
-		"/labels/{labelId}",
-		DelLabel,
-	},
-	// Transaction router.Routers
-	router.Route{
-		"AddTransaction",
-		"POST",
-		"/transactions",
-		AddTransaction,
-	},
-	router.Route{
-		"GetTransactions",
-		"GET",
-		"/transactions",
-		GetTransactions,
-	},
-	router.Route{
-		"GetTransaction",
-		"GET",
-		"/transactions/{transactionId}",
-		GetTransaction,
-	},
-	router.Route{
-		"DeleteTransaction",
-		"DEL",
-		"/transactions/{transactionId}",
-		DelTransaction,
-	},
-}
+})

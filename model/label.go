@@ -2,15 +2,13 @@ package model
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
 	"pefi/model/redis"
 	"strconv"
 )
 
 type (
-	Labels []Label
-
 	Label struct {
 		Id          int64  `json:"id"`
 		Name        string `json:"name"`
@@ -18,65 +16,23 @@ type (
 	}
 )
 
-var (
-	labelHeader = []string{
-		"id",
-		"name",
-		"desc",
-	}
-)
-
-func (ls *Labels) Header() (s []string) {
-	return labelHeader
-}
-
-func (ls *Labels) Body() (s [][]string) {
-	for _, l := range *ls {
-		s = append(s, l.Table())
-	}
-	return s
-}
-
-func (ls *Labels) Footer() (s []string) {
-	return []string{}
-}
-
-func (l *Label) Header() (s []string) {
-	return labelHeader
-}
-
-func (l *Label) Body() (s [][]string) {
-	return [][]string{l.Table()}
-}
-
-func (l *Label) Footer() (s []string) {
-	return []string{}
-}
-
-func (l *Label) Table() (s []string) {
-	return []string{
-		strconv.Itoa(int(l.Id)),
-		l.Name,
-		l.Description,
-	}
-}
-
-func GetLabels() (labs []Label, err error) {
+func GetLabels() (interface{}, error) {
 	vals, err := redis.HGetAll("Label")
 	if err != nil {
-		return
+		return nil, err
 	}
+	var labs []Label
 	for _, val := range vals {
 		l := new(Label)
 		if err = json.Unmarshal([]byte(val), l); err != nil {
-			return
+			return nil, err
 		}
 		labs = append(labs, *l)
 	}
-	return
+	return &labs, nil
 }
 
-func GetLabel(id int64) (lab *Label, err error) {
+func GetLabel(id int64) (lab interface{}, err error) {
 	val, err := redis.HGet("Label", strconv.Itoa(int(id)))
 	if err != nil {
 		fmt.Println(err)
@@ -95,7 +51,11 @@ func DelLabel(id int64) (err error) {
 	return
 }
 
-func NewLabel(lab Label) (nlab *Label, err error) {
+func NewLabel(in interface{}) (nlab interface{}, err error) {
+	lab, ok := in.(*Label)
+	if !ok {
+		return nil, errors.New("couldnt cast")
+	}
 	id, err := redis.HIncrBy("unique_ids", "Label", 1)
 	if err != nil {
 		fmt.Println(err)
@@ -109,18 +69,4 @@ func NewLabel(lab Label) (nlab *Label, err error) {
 	}
 	redis.HSet("Label", strconv.Itoa(int(lab.Id)), string(jlab))
 	return &lab, err
-}
-
-func DecodeLabel(r io.Reader) (label interface{}, err error) {
-	label = new(Label)
-	err = json.NewDecoder(r).Decode(label)
-	return
-}
-
-func EncodeLabels(ls []Label, w io.Writer) (err error) {
-	return json.NewEncoder(w).Encode(ls)
-}
-
-func EncodeLabel(l Label, w io.Writer) (err error) {
-	return json.NewEncoder(w).Encode(l)
 }

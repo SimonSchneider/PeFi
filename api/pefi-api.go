@@ -2,13 +2,11 @@ package main
 
 import (
 	"net/http"
-	"pefi/api"
-	//"pefi/logger"
 	"pefi/router"
 )
 
 func main() {
-	router := router.NewRouter(api.Routes)
+	router := router.NewRouter(Routes)
 
 	http.ListenAndServe(":22400", router)
 }
