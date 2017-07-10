@@ -1,3 +1,4 @@
+//cli client for the pefi api
 package main
 
 import (
@@ -25,6 +26,13 @@ func main() {
 			Usage:       "port of the server",
 			EnvVar:      "PEFI_PORT",
 			Destination: &Conn.Port,
+		},
+		cli.IntFlag{
+			Name:        "user, u",
+			Value:       1,
+			Usage:       "user on the server",
+			EnvVar:      "PEFI_USER",
+			Destination: &Conn.User,
 		},
 	}
 	app.Commands = []cli.Command{

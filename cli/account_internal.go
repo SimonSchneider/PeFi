@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/urfave/cli"
 	"pefi/model"
@@ -17,6 +18,7 @@ func internalAccountCommand() cli.Command {
 			new(internalAccounts),
 			createInternalAccount,
 			internalAccountFlags,
+			createGraph,
 		),
 	}
 }
@@ -90,14 +92,18 @@ func (a *internalAccount) Table() (s []string) {
 }
 
 func createInternalAccount(c *cli.Context) (t tabular, err error) {
+	tmp, err := createExternalAccount(c)
+	if err != nil {
+		return nil, err
+	}
+	exAcc, ok := tmp.(*externalAccount)
+	if !ok {
+		return nil, errors.New("not possible to get external account")
+	}
 	return &internalAccount{
 		InternalAccount: model.InternalAccount{
-			ExternalAccount: model.ExternalAccount{
-				Name:        c.String("name"),
-				Description: c.String("description"),
-				LabelIds:    c.Int64Slice("labels"),
-			},
-			Balance: c.Float64("balance"),
+			ExternalAccount: (*exAcc).ExternalAccount,
+			Balance:         c.Float64("balance"),
 		},
 	}, nil
 }

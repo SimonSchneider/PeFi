@@ -1,80 +1,57 @@
 package cache
 
 import (
-	"fmt"
+	"errors"
 	"github.com/garyburd/redigo/redis"
-	"net/http"
-	"os"
-	"pefi/router"
+	//"os"
 )
 
-type cachingResponseWriter struct {
-	status int
-	body   []byte
-	http.ResponseWriter
-}
-
-var conn redis.Conn
-
-func getClient() (redis.Conn, error) {
-	if conn != nil {
-		return conn, nil
+type (
+	//Client is the client object
+	Client struct {
+		address string
+		db      int64
+		conn    redis.Conn
 	}
-	host := os.Getenv("redis-host")
-	port := os.Getenv("redis-port")
-	conn, err := redis.Dial("tcp", host+":"+port, redis.DialDatabase(1))
-	return conn, err
+)
+
+//Do is a wrapper of redigo conn.Do
+func (c *Client) Do(command string, args ...interface{}) (reply interface{}, err error) {
+	return c.conn.Do(command, args...)
 }
 
-func (w *cachingResponseWriter) WriteHeader(code int) {
-	w.status = code
-	w.ResponseWriter.WriteHeader(code)
-}
+const (
+	lockedDB = 0
+)
 
-func (w *cachingResponseWriter) Write(b []byte) (int, error) {
-	w.body = b
-	return w.ResponseWriter.Write(b)
-}
-
-func HTTPCache(timeout int) router.Adaptor {
-	return func(inner http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			rc, err := getClient()
-			if err == nil {
-				val, err := redis.String(rc.Do("GET", r.RequestURI))
-				if err == nil {
-					w.Write([]byte(val))
-					return
-				}
-			}
-			cachingRW := &cachingResponseWriter{
-				ResponseWriter: w,
-			}
-			inner.ServeHTTP(cachingRW, r)
-			if cachingRW.status != http.StatusOK {
-				fmt.Println("not caching", cachingRW.status, http.StatusOK)
-				return
-			}
-			_, err = rc.Do("SET", r.RequestURI, cachingRW.body)
-			if err != nil {
-				return
-			}
-			if timeout != 0 {
-				rc.Do("EXPIRE", r.RequestURI, timeout)
-			}
-		}
+// NewCache returns a new cache object if it is able to connect
+// to the it
+func NewCache(host string, port string) (*Client, error) {
+	address := host + ":" + port
+	conn, err := redis.Dial("tcp", address, redis.DialDatabase(lockedDB))
+	if err != nil {
+		return nil, err
 	}
+	db, err := redis.Int64(conn.Do("INCR", "caches"))
+	if err != nil {
+		return nil, err
+	}
+	if db == lockedDB {
+		return nil, errors.New("got unexpected response from redis. Is used for something else?")
+	}
+	return &Client{
+		address: address,
+		db:      db,
+		conn:    conn,
+	}, nil
 }
 
-func HTTPWipe(key string) router.Adaptor {
-	return func(inner http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			rc, err := getClient()
-			if err == nil {
-				rc.Do("DEL", key)
-				rc.Do("DEL", r.RequestURI)
-			}
-			inner.ServeHTTP(w, r)
-		}
-	}
-}
+//func getClient() (redis.Conn, error) {
+//if conn != nil {
+//return conn, nil
+//}
+//host := os.Getenv("redis-host")
+//port := os.Getenv("redis-port")
+//conn, err := redis.Dial("tcp", host+":"+port, redis.DialDatabase(1))
+//return conn, err
+//}

@@ -23,6 +23,7 @@ type (
 	connection struct {
 		Host string
 		Port int
+		User int
 	}
 
 	APIFlags struct {
@@ -78,7 +79,7 @@ func ToTable(t tabular, w io.Writer) {
 	table.Render()
 }
 
-func GetAPISubCmd(endpoint string, mod tabular, mods tabular, cF func(*cli.Context) (tabular, error), flags APIFlags) []cli.Command {
+func GetAPISubCmd(endpoint string, mod tabular, mods tabular, cF func(*cli.Context) (tabular, error), flags APIFlags, finalF func(*cli.Context, tabular) error) []cli.Command {
 	return []cli.Command{
 		cli.Command{
 			Name:  "ls",
@@ -91,6 +92,7 @@ func GetAPISubCmd(endpoint string, mod tabular, mods tabular, cF func(*cli.Conte
 						mods,
 						endpoint,
 					),
+					finalF,
 				)
 			},
 		},
@@ -104,6 +106,19 @@ func GetAPISubCmd(endpoint string, mod tabular, mods tabular, cF func(*cli.Conte
 					mod,
 					cF,
 					AddReq(endpoint),
+				)
+			},
+		},
+		cli.Command{
+			Name:  "mod",
+			Usage: "mod",
+			Flags: append(flags.AddFlags, addFlags...),
+			Action: func(c *cli.Context) (err error) {
+				return ModCmd(
+					c,
+					mod,
+					cF,
+					ModReq(endpoint),
 				)
 			},
 		},
@@ -133,7 +148,10 @@ func GetAPISubCmd(endpoint string, mod tabular, mods tabular, cF func(*cli.Conte
 }
 
 //ListCmd list the content retreived by f
-func ListCmd(c *cli.Context, f func(string) (tabular, error)) (err error) {
+func ListCmd(c *cli.Context, f func(string) (tabular, error), ff func(*cli.Context, tabular) error) (err error) {
+	if len(c.Args()) != 0 {
+		return cli.NewExitError("incorrect number of args", 1)
+	}
 	out := os.Stdout
 	t, err := f("")
 	if err != nil {
@@ -148,6 +166,9 @@ func ListCmd(c *cli.Context, f func(string) (tabular, error)) (err error) {
 		return nil
 	}
 	ToTable(t, out)
+	if ff != nil {
+		ff(c, t)
+	}
 	return nil
 }
 
@@ -175,7 +196,6 @@ func GetCmd(c *cli.Context, f func(string) (tabular, error)) error {
 
 //DelCmd Meta for deleting against the API
 func DelCmd(c *cli.Context, f func(string) error) error {
-	//out := os.Stdout
 	if len(c.Args()) != 1 {
 		return cli.NewExitError("incorrect number of args", 1)
 	}
@@ -188,6 +208,9 @@ func DelCmd(c *cli.Context, f func(string) error) error {
 
 //AddCmd Meta for adding against the API
 func AddCmd(c *cli.Context, t tabular, cF func(*cli.Context) (tabular, error), f func(tabular) (tabular, error)) (err error) {
+	if len(c.Args()) != 0 {
+		return cli.NewExitError("incorrect number of args", 1)
+	}
 	out := os.Stdout
 	if path := c.String("file"); path != "" {
 		file, err := os.Open(path)
@@ -222,6 +245,36 @@ func AddCmd(c *cli.Context, t tabular, cF func(*cli.Context) (tabular, error), f
 	return nil
 }
 
+//AddCmd Meta for adding against the API
+func ModCmd(c *cli.Context, t tabular, cF func(*cli.Context) (tabular, error), f func(string, tabular) error) (err error) {
+	if len(c.Args()) != 1 {
+		return cli.NewExitError("incorrect number of args", 1)
+	}
+	if path := c.String("file"); path != "" {
+		file, err := os.Open(path)
+		if err != nil {
+			s := fmt.Sprintf("%s", err)
+			return cli.NewExitError("error reading file:"+s, 1)
+		}
+		if err = json.NewDecoder(file).Decode(t); err != nil {
+			s := fmt.Sprintf("%s", err)
+			return cli.NewExitError("error reading json file:"+s, 1)
+		}
+	} else {
+		t, err = cF(c)
+		if err != nil {
+			s := fmt.Sprintf("%s", err)
+			return cli.NewExitError("error creating from flags:"+s, 1)
+		}
+	}
+	err = f(c.Args().First(), t)
+	if err != nil {
+		s := fmt.Sprintf("%s", err)
+		return cli.NewExitError("error adding:"+s, 1)
+	}
+	return nil
+}
+
 func AddReq(endpoint string) func(tabular) (tabular, error) {
 	return func(mod tabular) (newMod tabular, err error) {
 		buf, err := json.Marshal(mod)
@@ -231,6 +284,7 @@ func AddReq(endpoint string) func(tabular) (tabular, error) {
 		req, err := http.NewRequest("POST",
 			GetAddr(endpoint),
 			bytes.NewBuffer(buf))
+		req.Header.Set("user", strconv.Itoa(Conn.User))
 		if err != nil {
 			return nil, err
 		}
@@ -250,12 +304,44 @@ func AddReq(endpoint string) func(tabular) (tabular, error) {
 	}
 }
 
+func ModReq(endpoint string) func(string, tabular) error {
+	return func(id string, mod tabular) (err error) {
+		buf, err := json.Marshal(mod)
+		if err != nil {
+			return err
+		}
+		req, err := http.NewRequest("PUT",
+			GetAddr(endpoint+"/"+id),
+			bytes.NewBuffer(buf))
+		req.Header.Set("user", strconv.Itoa(Conn.User))
+		if err != nil {
+			return err
+		}
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != http.StatusOK {
+			return errors.New(resp.Status)
+		}
+		return nil
+	}
+}
+
 func GetReq(mod tabular, endpoint string) func(string) (tabular, error) {
 	return func(id string) (newMod tabular, err error) {
 		if id != "" {
 			endpoint += "/" + id
 		}
-		resp, err := http.Get(GetAddr(endpoint))
+		req, err := http.NewRequest("GET",
+			GetAddr(endpoint), nil)
+		req.Header.Set("user", strconv.Itoa(Conn.User))
+		if err != nil {
+			return nil, err
+		}
+		client := &http.Client{}
+		resp, err := client.Do(req)
 		if err != nil {
 			return nil, err
 		}
@@ -273,6 +359,7 @@ func GetReq(mod tabular, endpoint string) func(string) (tabular, error) {
 func DelReq(endpoint string) func(string) error {
 	return func(id string) (err error) {
 		req, err := http.NewRequest("DEL", GetAddr(endpoint+"/"+id), nil)
+		req.Header.Set("user", strconv.Itoa(Conn.User))
 		if err != nil {
 			return err
 		}

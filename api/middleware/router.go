@@ -1,4 +1,4 @@
-package router
+package middleware
 
 import (
 	"github.com/gorilla/mux"
@@ -18,7 +18,7 @@ type (
 	Routes []Route
 )
 
-//Adds the Adaptors to the http.Handler
+// Handler adds the Adaptors to the http.Handler
 func Handler(h http.HandlerFunc, adaptors ...Adaptor) http.HandlerFunc {
 	for i := len(adaptors) - 1; i >= 0; i-- {
 		h = adaptors[i](h)
@@ -26,6 +26,7 @@ func Handler(h http.HandlerFunc, adaptors ...Adaptor) http.HandlerFunc {
 	return h
 }
 
+// NewRouter Returns a new router that will route the Routes
 func NewRouter(routes Routes) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {

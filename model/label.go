@@ -10,9 +10,10 @@ import (
 
 type (
 	Label struct {
-		Id          int64  `json:"id"`
+		ID          int64  `json:"id"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
+		CategorieID int64  `json:"category_id"`
 	}
 )
 
@@ -61,12 +62,12 @@ func NewLabel(in interface{}) (nlab interface{}, err error) {
 		fmt.Println(err)
 		return
 	}
-	lab.Id = id
+	lab.ID = id
 	jlab, err := json.Marshal(lab)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	redis.HSet("Label", strconv.Itoa(int(lab.Id)), string(jlab))
+	redis.HSet("Label", strconv.Itoa(int(lab.ID)), string(jlab))
 	return &lab, err
 }

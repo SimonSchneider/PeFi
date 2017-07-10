@@ -10,11 +10,11 @@ import (
 
 type (
 	Categorie struct {
-		Id          int64   `json:"id"`
-		Name        string  `json:"name"`
-		Description string  `json:"description"`
-		LabelIds    []int64 `json:"label_ids"`
-		ChildrenIds []int64 `json:"children_ids"`
+		ID          int64  `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		//LabelIds    []int64 `json:"label_ids"`
+		//ChildrenIds []int64 `json:"children_ids"`
 	}
 )
 
@@ -65,12 +65,12 @@ func NewCategorie(in interface{}) (nc interface{}, err error) {
 		fmt.Println(err)
 		return
 	}
-	c.Id = id
+	c.ID = id
 	jc, err := json.Marshal(c)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	redis.HSet("Categorie", strconv.Itoa(int(c.Id)), string(jc))
+	redis.HSet("Categorie", strconv.Itoa(int(c.ID)), string(jc))
 	return &c, err
 }

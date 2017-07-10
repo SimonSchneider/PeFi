@@ -10,10 +10,10 @@ import (
 
 type (
 	ExternalAccount struct {
-		Id          int64   `json:"id"`
-		Name        string  `json:"name"`
-		Description string  `json:"description"`
-		LabelIds    []int64 `json:"label_ids"`
+		ID          int64  `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		CategorieID int64  `json:"category_id"`
 	}
 )
 
@@ -63,11 +63,11 @@ func NewExternalAccount(in interface{}) (na interface{}, err error) {
 		fmt.Println(err)
 		return
 	}
-	a.Id = id
+	a.ID = id
 	ma, err := json.Marshal(a)
 	if err != nil {
 		return
 	}
-	redis.HSet("ExternalAccount", strconv.Itoa(int(a.Id)), string(ma))
+	redis.HSet("ExternalAccount", strconv.Itoa(int(a.ID)), string(ma))
 	return &a, err
 }

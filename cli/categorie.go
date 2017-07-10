@@ -4,7 +4,6 @@ import (
 	"github.com/urfave/cli"
 	"pefi/model"
 	"strconv"
-	"strings"
 )
 
 func categorieCommand() cli.Command {
@@ -18,6 +17,7 @@ func categorieCommand() cli.Command {
 			new(categories),
 			createCategorie,
 			categorieFlags,
+			nil,
 		),
 	}
 }
@@ -35,8 +35,6 @@ var (
 		"id",
 		"name",
 		"description",
-		"Labels",
-		"Children",
 	}
 
 	categorieFlags = APIFlags{
@@ -48,14 +46,6 @@ var (
 			cli.StringFlag{
 				Name:  "description,d",
 				Usage: "Name of account",
-			},
-			cli.Int64SliceFlag{
-				Name:  "labels,l",
-				Usage: "Label set",
-			},
-			cli.Int64SliceFlag{
-				Name:  "children,c",
-				Usage: "Children set",
 			},
 		},
 	}
@@ -90,20 +80,20 @@ func (c *categorie) Footer() (s []string) {
 
 func (c *categorie) Table() (s []string) {
 	s = []string{
-		strconv.Itoa(int(c.Id)),
+		strconv.Itoa(int(c.ID)),
 		c.Name,
 		c.Description,
 	}
-	labelIds := []string{}
-	for _, id := range c.LabelIds {
-		labelIds = append(labelIds, strconv.Itoa(int(id)))
-	}
-	s = append(s, strings.Join(labelIds, ","))
-	childIds := []string{}
-	for _, id := range c.ChildrenIds {
-		childIds = append(childIds, strconv.Itoa(int(id)))
-	}
-	s = append(s, strings.Join(childIds, ","))
+	//labelIds := []string{}
+	//for _, id := range c.LabelIds {
+	//labelIds = append(labelIds, strconv.Itoa(int(id)))
+	//}
+	//s = append(s, strings.Join(labelIds, ","))
+	//childIds := []string{}
+	//for _, id := range c.ChildrenIds {
+	//childIds = append(childIds, strconv.Itoa(int(id)))
+	//}
+	//s = append(s, strings.Join(childIds, ","))
 	return s
 }
 
@@ -112,8 +102,8 @@ func createCategorie(c *cli.Context) (nc tabular, err error) {
 		Categorie: model.Categorie{
 			Name:        c.String("name"),
 			Description: c.String("description"),
-			LabelIds:    c.Int64Slice("labels"),
-			ChildrenIds: c.Int64Slice("children"),
+			//LabelIds:    c.Int64Slice("labels"),
+			//ChildrenIds: c.Int64Slice("children"),
 		},
 	}, nil
 }

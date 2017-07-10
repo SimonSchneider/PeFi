@@ -4,7 +4,6 @@ import (
 	"github.com/urfave/cli"
 	"pefi/model"
 	"strconv"
-	"strings"
 )
 
 func externalAccountCommand() cli.Command {
@@ -18,6 +17,7 @@ func externalAccountCommand() cli.Command {
 			new(externalAccounts),
 			createExternalAccount,
 			externalAccountFlags,
+			nil,
 		),
 	}
 }
@@ -35,7 +35,7 @@ var (
 		"id",
 		"name",
 		"description",
-		"labels",
+		"category",
 	}
 
 	externalAccountFlags = APIFlags{
@@ -48,8 +48,8 @@ var (
 				Name:  "description,d",
 				Usage: "Name of account",
 			},
-			cli.Int64SliceFlag{
-				Name:  "labels, l",
+			cli.Int64Flag{
+				Name:  "category, c",
 				Usage: "add a label to the account",
 			},
 		},
@@ -85,15 +85,11 @@ func (e *externalAccount) Footer() (s []string) {
 
 func (a *externalAccount) Table() (s []string) {
 	s = []string{
-		strconv.Itoa(int(a.Id)),
+		strconv.Itoa(int(a.ID)),
 		a.Name,
 		a.Description,
+		strconv.Itoa(int(a.CategorieID)),
 	}
-	labelIds := []string{}
-	for _, id := range a.LabelIds {
-		labelIds = append(labelIds, strconv.Itoa(int(id)))
-	}
-	s = append(s, strings.Join(labelIds, ","))
 	return s
 }
 
@@ -102,7 +98,7 @@ func createExternalAccount(c *cli.Context) (t tabular, err error) {
 		ExternalAccount: model.ExternalAccount{
 			Name:        c.String("name"),
 			Description: c.String("description"),
-			LabelIds:    c.Int64Slice("labels"),
+			CategorieID: c.Int64("category"),
 		},
 	}, nil
 }

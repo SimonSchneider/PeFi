@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	tm "github.com/buger/goterm"
 	"github.com/urfave/cli"
 	"pefi/model"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -20,6 +20,7 @@ func transactionCommand() cli.Command {
 			new(transactions),
 			createTransaction,
 			transactionFlags,
+			createGraph,
 		),
 	}
 }
@@ -39,7 +40,7 @@ var (
 		"amount",
 		"sender",
 		"receiver",
-		"labels",
+		"label",
 	}
 
 	transactionFlags = APIFlags{
@@ -55,15 +56,21 @@ var (
 			},
 			cli.Int64Flag{
 				Name:  "sender,s",
-				Usage: "Sender Id",
+				Usage: "Sender ID",
 			},
 			cli.Int64Flag{
 				Name:  "receiver,r",
-				Usage: "Receiver Id",
+				Usage: "Receiver ID",
 			},
-			cli.Int64SliceFlag{
-				Name:  "labels,l",
-				Usage: "Label Ids",
+			cli.Int64Flag{
+				Name:  "label,l",
+				Usage: "Label ID",
+			},
+		},
+		LsFlags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "graph, g",
+				Usage: "view a graph",
 			},
 		},
 	}
@@ -107,17 +114,13 @@ func (t *transaction) Footer() (s []string) {
 
 func (t *transaction) Table() (s []string) {
 	s = []string{
-		strconv.Itoa(int(t.Id)),
+		strconv.Itoa(int(t.ID)),
 		t.Time.Format("2006-01-02"),
 		fmt.Sprintf("%.2f", t.Amount),
-		strconv.Itoa(int(t.SenderId)),
-		strconv.Itoa(int(t.ReceiverId)),
+		strconv.Itoa(int(t.SenderID)),
+		strconv.Itoa(int(t.ReceiverID)),
+		strconv.Itoa(int(t.LabelID)),
 	}
-	labelIds := []string{}
-	for _, id := range t.LabelIds {
-		labelIds = append(labelIds, strconv.Itoa(int(id)))
-	}
-	s = append(s, strings.Join(labelIds, ","))
 	return s
 }
 
@@ -130,9 +133,27 @@ func createTransaction(c *cli.Context) (t tabular, err error) {
 		Transaction: model.Transaction{
 			Time:       timeT,
 			Amount:     c.Float64("amount"),
-			SenderId:   c.Int64("sender"),
-			ReceiverId: c.Int64("receiver"),
-			LabelIds:   c.Int64Slice("labels"),
+			SenderID:   c.Int64("sender"),
+			ReceiverID: c.Int64("receiver"),
+			LabelID:    c.Int64("label"),
 		},
 	}, nil
+}
+
+func createGraph(c *cli.Context, t tabular) error {
+	if !c.Bool("graph") {
+		return nil
+	}
+	//tm.Clear()
+	//tm.MoveCursor(0, 0)
+	chart := tm.NewLineChart(70, 20)
+	data := new(tm.DataTable)
+	data.AddColumn("Time")
+	data.AddColumn("Transactions")
+	for i := 0.0; i < 10; i += 1 {
+		data.AddRow(i, i*10)
+	}
+	tm.Println(chart.Draw(data))
+	tm.Flush()
+	return nil
 }

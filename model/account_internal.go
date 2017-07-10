@@ -61,11 +61,11 @@ func NewInternalAccount(in interface{}) (na interface{}, err error) {
 		fmt.Println(err)
 		return
 	}
-	a.Id = id
+	a.ID = id
 	ma, err := json.Marshal(a)
 	if err != nil {
 		return
 	}
-	redis.HSet("InternalAccount", strconv.Itoa(int(a.Id)), string(ma))
+	redis.HSet("InternalAccount", strconv.Itoa(int(a.ID)), string(ma))
 	return &a, err
 }

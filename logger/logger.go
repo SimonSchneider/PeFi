@@ -3,7 +3,6 @@ package logger
 import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"pefi/router"
 	"time"
 )
 
@@ -17,7 +16,7 @@ func (w *loggingResponseWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-func HTTPLogger(info string) router.Adaptor {
+func HTTPLogger(info string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(inner http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			loggingRW := &loggingResponseWriter{

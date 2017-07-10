@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/urfave/cli"
 	"pefi/model"
+	"reflect"
 	"strconv"
 )
 
@@ -17,6 +18,7 @@ func labelCommand() cli.Command {
 			new(labels),
 			createLabel,
 			labelFlags,
+			nil,
 		),
 	}
 }
@@ -30,12 +32,6 @@ type (
 )
 
 var (
-	labelHeader = []string{
-		"id",
-		"name",
-		"desc",
-	}
-
 	labelFlags = APIFlags{
 		AddFlags: []cli.Flag{
 			cli.StringFlag{
@@ -46,13 +42,19 @@ var (
 				Name:  "description,d",
 				Usage: "Name of account",
 			},
+			cli.Int64Flag{
+				Name:  "categorie,c",
+				Usage: "Name of categorie",
+			},
 		},
 	}
 )
 
 func (ls *labels) Header() (s []string) {
-	return labelHeader
+	return (&label{}).Header()
 }
+
+//}
 
 func (ls *labels) Body() (s [][]string) {
 	for _, l := range *ls {
@@ -66,7 +68,11 @@ func (ls *labels) Footer() (s []string) {
 }
 
 func (l *label) Header() (s []string) {
-	return labelHeader
+	val := reflect.ValueOf(l.Label)
+	for i := 0; i < val.Type().NumField(); i++ {
+		s = append(s, (val.Type().Field(i).Name))
+	}
+	return s
 }
 
 func (l *label) Body() (s [][]string) {
@@ -79,9 +85,10 @@ func (l *label) Footer() (s []string) {
 
 func (l *label) Table() (s []string) {
 	return []string{
-		strconv.Itoa(int(l.Id)),
+		strconv.Itoa(int(l.ID)),
 		l.Name,
 		l.Description,
+		strconv.Itoa(int(l.CategorieID)),
 	}
 }
 
@@ -90,6 +97,7 @@ func createLabel(c *cli.Context) (nl tabular, err error) {
 		Label: model.Label{
 			Name:        c.String("name"),
 			Description: c.String("description"),
+			CategorieID: c.Int64("categorie"),
 		},
 	}, nil
 }

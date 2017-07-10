@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"net/http"
+	"pefi/api/middleware"
 	"pefi/cache"
 	"pefi/logger"
-	"pefi/router"
 	"strconv"
 )
 
@@ -27,6 +27,12 @@ type (
 	delFunc  func(id int64) (err error)
 	getsFunc func() (newMods interface{}, err error)
 )
+
+var cacheClient *cache.Client
+
+func initMiddleware(c *cache.Client) {
+	cacheClient = c
+}
 
 func mwAdd(mod interface{}, apiFunc addFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -101,37 +107,37 @@ func mwDel(apiFunc delFunc) http.HandlerFunc {
 	}
 }
 
-func createRoutes(rs []route) router.Routes {
-	var routerRoutes router.Routes
+func createRoutes(rs []route) middleware.Routes {
+	var routerRoutes middleware.Routes
 	for _, r := range rs {
 		routerRoutes = append(routerRoutes,
-			router.Route{
+			middleware.Route{
 				"Get all " + r.name,
 				"GET",
 				"/" + r.name,
-				router.Handler(r.handlers.gets,
-					logger.HTTPLogger(r.name), cache.HTTPCache(120)),
+				middleware.Handler(r.handlers.gets,
+					logger.HTTPLogger(r.name), cache.HTTPCache(cacheClient, 120)),
 			},
-			router.Route{
+			middleware.Route{
 				"Get id " + r.name,
 				"GET",
 				"/" + r.name + "/{id}",
-				router.Handler(r.handlers.get,
-					logger.HTTPLogger(r.name), cache.HTTPCache(120)),
+				middleware.Handler(r.handlers.get,
+					logger.HTTPLogger(r.name), cache.HTTPCache(cacheClient, 120)),
 			},
-			router.Route{
+			middleware.Route{
 				"Del id " + r.name,
 				"DEL",
 				"/" + r.name + "/{id}",
-				router.Handler(r.handlers.del,
-					logger.HTTPLogger(r.name), cache.HTTPWipe("/"+r.name)),
+				middleware.Handler(r.handlers.del,
+					logger.HTTPLogger(r.name), cache.HTTPWipeCache(cacheClient, "/"+r.name)),
 			},
-			router.Route{
+			middleware.Route{
 				"Add " + r.name,
 				"POST",
 				"/" + r.name,
-				router.Handler(r.handlers.add,
-					logger.HTTPLogger(r.name), cache.HTTPWipe("/"+r.name)),
+				middleware.Handler(r.handlers.add,
+					logger.HTTPLogger(r.name), cache.HTTPWipeCache(cacheClient, "/"+r.name)),
 			},
 		)
 	}
