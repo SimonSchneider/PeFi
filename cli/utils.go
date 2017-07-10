@@ -8,6 +8,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -41,6 +42,18 @@ var (
 		cli.BoolFlag{
 			Name:  "json, j",
 			Usage: "print in json format",
+		},
+		cli.IntFlag{
+			Name:  "limit, l",
+			Usage: "limit the number of output",
+		},
+		cli.StringSliceFlag{
+			Name:  "orderBy, o",
+			Usage: "order the selection by `type`",
+		},
+		cli.StringSliceFlag{
+			Name:  "groupBy, gb",
+			Usage: "group the selection on `type`",
 		},
 	}
 
@@ -372,5 +385,11 @@ func DelReq(endpoint string) func(string) error {
 			return errors.New(resp.Status)
 		}
 		return nil
+	}
+}
+
+func cherr(err error) {
+	if err != nil {
+		log.Fatal("Error:", err)
 	}
 }

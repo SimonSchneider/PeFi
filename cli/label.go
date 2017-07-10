@@ -13,6 +13,8 @@ func labelCommand() cli.Command {
 		Aliases: []string{"lab", "l"},
 		Usage:   "label interface",
 		Subcommands: GetAPISubCmd(
+			//"/testing?orderBy=name&orderBy=description&limit=2",
+			//"/testing",
 			"/labels",
 			new(label),
 			new(labels),

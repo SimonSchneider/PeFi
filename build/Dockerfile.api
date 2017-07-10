@@ -1,0 +1,3 @@
+FROM scratch
+COPY api/ /
+CMD ["pefi_api"]
