@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"github.com/urfave/cli"
 	"pefi/api/models"
 )
@@ -14,8 +13,8 @@ func internalAccountCommand() cli.Command {
 		Usage:   "internal account interface",
 		Subcommands: GetAPISubCmd(
 			"/accounts/internal",
-			new(internalAccount),
-			new(internalAccounts),
+			new(models.InternalAccount),
+			new(models.InternalAccount),
 			createInternalAccount,
 			internalAccountFlags,
 			createGraph,
@@ -34,17 +33,17 @@ var (
 	}
 )
 
-func createInternalAccount(c *cli.Context) (t tabular, err error) {
+func createInternalAccount(c *cli.Context) (t interface{}, err error) {
 	tmp, err := createExternalAccount(c)
 	if err != nil {
 		return nil, err
 	}
-	exAcc, ok := tmp.(*externalAccount)
+	exAcc, ok := tmp.(*models.ExternalAccount)
 	if !ok {
 		return nil, errors.New("not possible to get external account")
 	}
-	return models.InternalAccount{
-		ExternalAccount: (*exAcc).ExternalAccount,
+	return &models.InternalAccount{
+		ExternalAccount: *exAcc,
 		Balance:         c.Float64("balance"),
 	}, nil
 }

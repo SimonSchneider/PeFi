@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	tm "github.com/buger/goterm"
 	"github.com/urfave/cli"
 	"pefi/api/models"
-	"strconv"
 	"time"
 )
 
@@ -16,8 +14,8 @@ func transactionCommand() cli.Command {
 		Usage:   "transaction interface",
 		Subcommands: GetAPISubCmd(
 			"/transactions",
-			new(transaction),
-			new(transactions),
+			new(models.Transaction),
+			new([]models.Transaction),
 			createTransaction,
 			transactionFlags,
 			createGraph,
@@ -59,12 +57,12 @@ var (
 	}
 )
 
-func createTransaction(c *cli.Context) (t tabular, err error) {
+func createTransaction(c *cli.Context) (t interface{}, err error) {
 	timeT, err := time.Parse(time.RFC3339, c.String("time"))
 	if err != nil {
 		return nil, err
 	}
-	return model.Transaction{
+	return &models.Transaction{
 		Time:       timeT,
 		Amount:     c.Float64("amount"),
 		SenderID:   c.Int64("sender"),
@@ -73,7 +71,7 @@ func createTransaction(c *cli.Context) (t tabular, err error) {
 	}, nil
 }
 
-func createGraph(c *cli.Context, t tabular) error {
+func createGraph(c *cli.Context, t interface{}) error {
 	if !c.Bool("graph") {
 		return nil
 	}

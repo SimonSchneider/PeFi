@@ -7,19 +7,12 @@ import (
 	"fmt"
 	"github.com/simonschneider/gentab"
 	"github.com/urfave/cli"
-	"io"
 	"net/http"
 	"os"
 	"strconv"
 )
 
 type (
-	tabular interface {
-		Header() []string
-		Body() [][]string
-		Footer() []string
-	}
-
 	connection struct {
 		Host string
 		Port int
@@ -79,7 +72,7 @@ func GetAddr(endpoint string) string {
 //table.Render()
 //}
 
-func GetAPISubCmd(endpoint string, mod tabular, mods tabular, cF func(*cli.Context) (tabular, error), flags APIFlags, finalF func(*cli.Context, tabular) error) []cli.Command {
+func GetAPISubCmd(endpoint string, mod interface{}, mods interface{}, cF func(*cli.Context) (interface{}, error), flags APIFlags, finalF func(*cli.Context, interface{}) error) []cli.Command {
 	return []cli.Command{
 		cli.Command{
 			Name:  "ls",
@@ -148,7 +141,7 @@ func GetAPISubCmd(endpoint string, mod tabular, mods tabular, cF func(*cli.Conte
 }
 
 //ListCmd list the content retreived by f
-func ListCmd(c *cli.Context, f func(string) (tabular, error), ff func(*cli.Context, tabular) error) (err error) {
+func ListCmd(c *cli.Context, f func(string) (interface{}, error), ff func(*cli.Context, interface{}) error) (err error) {
 	if len(c.Args()) != 0 {
 		return cli.NewExitError("incorrect number of args", 1)
 	}
@@ -173,7 +166,7 @@ func ListCmd(c *cli.Context, f func(string) (tabular, error), ff func(*cli.Conte
 }
 
 //GetCmd Meta for getting and printing against the API
-func GetCmd(c *cli.Context, f func(string) (tabular, error)) error {
+func GetCmd(c *cli.Context, f func(string) (interface{}, error)) error {
 	out := os.Stdout
 	if len(c.Args()) != 1 {
 		return cli.NewExitError("incorrect number of args", 1)
@@ -207,7 +200,7 @@ func DelCmd(c *cli.Context, f func(string) error) error {
 }
 
 //AddCmd Meta for adding against the API
-func AddCmd(c *cli.Context, t tabular, cF func(*cli.Context) (tabular, error), f func(tabular) (tabular, error)) (err error) {
+func AddCmd(c *cli.Context, t interface{}, cF func(*cli.Context) (interface{}, error), f func(interface{}) (interface{}, error)) (err error) {
 	if len(c.Args()) != 0 {
 		return cli.NewExitError("incorrect number of args", 1)
 	}
@@ -229,7 +222,7 @@ func AddCmd(c *cli.Context, t tabular, cF func(*cli.Context) (tabular, error), f
 			return cli.NewExitError("error creating from flags:"+s, 1)
 		}
 	}
-	nt, err := f(t)
+	_, err = f(t)
 	if err != nil {
 		s := fmt.Sprintf("%s", err)
 		return cli.NewExitError("error adding:"+s, 1)
@@ -246,7 +239,7 @@ func AddCmd(c *cli.Context, t tabular, cF func(*cli.Context) (tabular, error), f
 }
 
 //AddCmd Meta for adding against the API
-func ModCmd(c *cli.Context, t tabular, cF func(*cli.Context) (tabular, error), f func(string, tabular) error) (err error) {
+func ModCmd(c *cli.Context, t interface{}, cF func(*cli.Context) (interface{}, error), f func(string, interface{}) error) (err error) {
 	if len(c.Args()) != 1 {
 		return cli.NewExitError("incorrect number of args", 1)
 	}
@@ -275,8 +268,8 @@ func ModCmd(c *cli.Context, t tabular, cF func(*cli.Context) (tabular, error), f
 	return nil
 }
 
-func AddReq(endpoint string) func(tabular) (tabular, error) {
-	return func(mod tabular) (newMod tabular, err error) {
+func AddReq(endpoint string) func(interface{}) (interface{}, error) {
+	return func(mod interface{}) (newMod interface{}, err error) {
 		buf, err := json.Marshal(mod)
 		if err != nil {
 			return nil, err
@@ -304,8 +297,8 @@ func AddReq(endpoint string) func(tabular) (tabular, error) {
 	}
 }
 
-func ModReq(endpoint string) func(string, tabular) error {
-	return func(id string, mod tabular) (err error) {
+func ModReq(endpoint string) func(string, interface{}) error {
+	return func(id string, mod interface{}) (err error) {
 		buf, err := json.Marshal(mod)
 		if err != nil {
 			return err
@@ -329,8 +322,8 @@ func ModReq(endpoint string) func(string, tabular) error {
 	}
 }
 
-func GetReq(mod tabular, endpoint string) func(string) (tabular, error) {
-	return func(id string) (newMod tabular, err error) {
+func GetReq(mod interface{}, endpoint string) func(string) (interface{}, error) {
+	return func(id string) (newMod interface{}, err error) {
 		if id != "" {
 			endpoint += "/" + id
 		}

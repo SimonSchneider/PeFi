@@ -3,27 +3,26 @@ package main
 import (
 	"github.com/urfave/cli"
 	"pefi/api/models"
-	"strconv"
 )
 
-func categorieCommand() cli.Command {
+func categoryCommand() cli.Command {
 	return cli.Command{
-		Name:    "categorie",
+		Name:    "category",
 		Aliases: []string{"cat", "c"},
-		Usage:   "categorie interface",
+		Usage:   "category interface",
 		Subcommands: GetAPISubCmd(
 			"/categories",
-			new(categorie),
-			new(categories),
-			createCategorie,
-			categorieFlags,
+			new(models.Category),
+			new([]models.Category),
+			createCategory,
+			categoryFlags,
 			nil,
 		),
 	}
 }
 
 var (
-	categorieFlags = APIFlags{
+	categoryFlags = APIFlags{
 		AddFlags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "name,n",
@@ -37,8 +36,8 @@ var (
 	}
 )
 
-func createCategorie(c *cli.Context) (nc tabular, err error) {
-	return model.Categorie{
+func createCategory(c *cli.Context) (nc interface{}, err error) {
+	return &models.Category{
 		Name:        c.String("name"),
 		Description: c.String("description"),
 		//ChildrenIds: c.Int64Slice("children"),

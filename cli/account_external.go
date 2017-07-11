@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/urfave/cli"
 	"pefi/api/models"
-	"strconv"
 )
 
 func externalAccountCommand() cli.Command {
@@ -13,8 +12,8 @@ func externalAccountCommand() cli.Command {
 		Usage:   "external account interface",
 		Subcommands: GetAPISubCmd(
 			"/accounts/external",
-			new(models.externalAccount),
-			new(models.externalAccounts),
+			new(models.ExternalAccount),
+			new([]models.ExternalAccount),
 			createExternalAccount,
 			externalAccountFlags,
 			nil,
@@ -41,10 +40,10 @@ var (
 	}
 )
 
-func createExternalAccount(c *cli.Context) (t tabular, err error) {
-	return &models.externalAccount{
+func createExternalAccount(c *cli.Context) (t interface{}, err error) {
+	return &models.ExternalAccount{
 		Name:        c.String("name"),
 		Description: c.String("description"),
-		CategorieID: c.Int64("category"),
+		CategoryID:  c.Int64("category"),
 	}, nil
 }

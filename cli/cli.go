@@ -41,7 +41,7 @@ func main() {
 		transactionCommand(),
 		loginCommand(),
 		labelCommand(),
-		categorieCommand(),
+		categoryCommand(),
 	}
 	app.Run(os.Args)
 }

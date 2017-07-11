@@ -18,6 +18,18 @@ var (
 	db *sqlx.DB
 )
 
+type (
+	endpoint interface {
+		URL() string
+		GetNewInstance() interface{}
+		GetAll(user int64) (interface{}, error)
+		Add(user int64, IDENT interface{}) error
+		Get(user, id int64) (interface{}, error)
+		Del(user, id int64) error
+		Mod(user, id int64, IDENT interface{}) error
+	}
+)
+
 func main() {
 	router := mux.NewRouter()
 
@@ -51,25 +63,13 @@ func main() {
 			Methods("PUT")
 	}
 
-	//router.
-	//Handle("/categories", getAllCategories).
-	//Methods("GET")
+	router.
+		Handle("/testing", Tmp()).
+		Methods("GET")
 
-	//router.
-	//Handle("/categories", addCategory).
-	//Methods("POST")
-
-	//router.
-	//Handle("/categories/{id}", delCategory).
-	//Methods("DEL")
-
-	//router.
-	//Handle("/categories/{id}", getCategory).
-	//Methods("GET")
-
-	//router.
-	//Handle("/categories/{id}", modCategory).
-	//Methods("PUT")
+	router.
+		Handle("/testing/{id}", TmpG()).
+		Methods("GET")
 
 	dbinfo := "host=postgres user=postgres database=pefi sslmode=disable"
 
@@ -82,6 +82,8 @@ func main() {
 	}
 	db = tmp
 	models.InitDB(db)
+
+	Init(dbinfo)
 
 	fmt.Println("starting")
 

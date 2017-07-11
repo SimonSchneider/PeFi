@@ -3,8 +3,6 @@ package main
 import (
 	"github.com/urfave/cli"
 	"pefi/api/models"
-	"reflect"
-	"strconv"
 )
 
 func labelCommand() cli.Command {
@@ -14,8 +12,8 @@ func labelCommand() cli.Command {
 		Usage:   "label interface",
 		Subcommands: GetAPISubCmd(
 			"/labels",
-			new(label),
-			new(labels),
+			new(models.Label),
+			new([]models.Label),
 			createLabel,
 			labelFlags,
 			nil,
@@ -42,10 +40,10 @@ var (
 	}
 )
 
-func createLabel(c *cli.Context) (nl tabular, err error) {
-	return model.Label{
+func createLabel(c *cli.Context) (nl interface{}, err error) {
+	return &models.Label{
 		Name:        c.String("name"),
 		Description: c.String("description"),
-		CategorieID: c.Int64("categorie"),
+		CategoryID:  c.Int64("categorie"),
 	}, nil
 }
