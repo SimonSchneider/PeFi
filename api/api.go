@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	"net/http"
 	"os"
-	"pefi/v2api/models"
+	"pefi/api/models"
 	"strconv"
 )
 
