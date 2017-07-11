@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
+	"github.com/simonschneider/gentab"
 	"github.com/urfave/cli"
 	"io"
 	"net/http"
@@ -71,13 +71,13 @@ func GetAddr(endpoint string) string {
 }
 
 //ToTable create a table from the content of t
-func ToTable(t tabular, w io.Writer) {
-	table := tablewriter.NewWriter(w)
-	table.SetHeader(t.Header())
-	table.AppendBulk(t.Body())
-	table.SetFooter(t.Footer())
-	table.Render()
-}
+//func ToTable(t tabular, w io.Writer) {
+//table := tablewriter.NewWriter(w)
+//table.SetHeader(t.Header())
+//table.AppendBulk(t.Body())
+//table.SetFooter(t.Footer())
+//table.Render()
+//}
 
 func GetAPISubCmd(endpoint string, mod tabular, mods tabular, cF func(*cli.Context) (tabular, error), flags APIFlags, finalF func(*cli.Context, tabular) error) []cli.Command {
 	return []cli.Command{
@@ -165,7 +165,7 @@ func ListCmd(c *cli.Context, f func(string) (tabular, error), ff func(*cli.Conte
 		}
 		return nil
 	}
-	ToTable(t, out)
+	gentab.PrintTable(out, t)
 	if ff != nil {
 		ff(c, t)
 	}
@@ -190,7 +190,7 @@ func GetCmd(c *cli.Context, f func(string) (tabular, error)) error {
 		}
 		return nil
 	}
-	ToTable(t, out)
+	gentab.PrintTable(out, t)
 	return nil
 }
 
@@ -241,7 +241,7 @@ func AddCmd(c *cli.Context, t tabular, cF func(*cli.Context) (tabular, error), f
 		}
 		return nil
 	}
-	ToTable(nt, out)
+	//ToTable(nt, out)
 	return nil
 }
 

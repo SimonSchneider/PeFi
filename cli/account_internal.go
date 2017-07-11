@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/urfave/cli"
-	"pefi/model"
+	"pefi/api/models"
 )
 
 func internalAccountCommand() cli.Command {
@@ -23,20 +23,7 @@ func internalAccountCommand() cli.Command {
 	}
 }
 
-type (
-	internalAccounts []internalAccount
-
-	internalAccount struct {
-		model.InternalAccount
-	}
-)
-
 var (
-	internalAccountHeader = append(
-		externalAccountHeader,
-		"balance",
-	)
-
 	internalAccountFlags = APIFlags{
 		AddFlags: append([]cli.Flag{
 			cli.Float64Flag{
@@ -47,50 +34,6 @@ var (
 	}
 )
 
-func (is *internalAccounts) Header() (s []string) {
-	return internalAccountHeader
-}
-
-func (is *internalAccounts) Body() (s [][]string) {
-	for _, i := range *is {
-		s = append(s, i.Table())
-	}
-	return s
-}
-
-func (is *internalAccounts) Footer() (s []string) {
-	sum := 0.0
-	for _, i := range *is {
-		sum += i.Balance
-	}
-	for i := 0; i < len(internalAccountHeader); i++ {
-		s = append(s, "")
-	}
-	s[len(s)-1] = fmt.Sprintf("%.2f", sum)
-	s[len(s)-2] = "Total"
-	return s
-}
-
-func (i *internalAccount) Header() (s []string) {
-	return internalAccountHeader
-}
-
-func (i *internalAccount) Body() (s [][]string) {
-	return [][]string{i.Table()}
-}
-
-func (i *internalAccount) Footer() (s []string) {
-	return []string{}
-}
-
-func (a *internalAccount) Table() (s []string) {
-	var tmp externalAccount
-	tmp.ExternalAccount = a.ExternalAccount
-	s = tmp.Table()
-	s = append(s, fmt.Sprintf("%.2f", a.Balance))
-	return s
-}
-
 func createInternalAccount(c *cli.Context) (t tabular, err error) {
 	tmp, err := createExternalAccount(c)
 	if err != nil {
@@ -100,10 +43,8 @@ func createInternalAccount(c *cli.Context) (t tabular, err error) {
 	if !ok {
 		return nil, errors.New("not possible to get external account")
 	}
-	return &internalAccount{
-		InternalAccount: model.InternalAccount{
-			ExternalAccount: (*exAcc).ExternalAccount,
-			Balance:         c.Float64("balance"),
-		},
+	return models.InternalAccount{
+		ExternalAccount: (*exAcc).ExternalAccount,
+		Balance:         c.Float64("balance"),
 	}, nil
 }

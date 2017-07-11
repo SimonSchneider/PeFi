@@ -2,10 +2,10 @@ package models
 
 type (
 	Label struct {
-		ID          int64  `json:"id" db:"id"`
-		Name        string `json:"name" db:"name"`
-		Description string `json:"description" db:"description"`
-		CategoryID  int64  `json:"category_id" db:"category_id"`
+		ID          int64  `json:"id" db:"id" tab:"id"`
+		Name        string `json:"name" db:"name" tab:"Name"`
+		Description string `json:"description" db:"description" tab:"description"`
+		CategoryID  int64  `json:"category_id" db:"category_id" tab:"category"`
 	}
 )
 
