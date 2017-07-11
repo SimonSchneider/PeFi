@@ -1,10 +1,15 @@
 package main
 
 import (
+	"fmt"
 	tm "github.com/buger/goterm"
 	"github.com/urfave/cli"
 	"pefi/api/models"
 	"time"
+)
+
+type (
+	transactions []models.Transaction
 )
 
 func transactionCommand() cli.Command {
@@ -15,12 +20,21 @@ func transactionCommand() cli.Command {
 		Subcommands: GetAPISubCmd(
 			"/transactions",
 			new(models.Transaction),
-			new([]models.Transaction),
+			new(transactions),
 			createTransaction,
 			transactionFlags,
 			createGraph,
 		),
 	}
+}
+
+func (t *transactions) Footer() ([]string, error) {
+	sum := float64(0.0)
+	for _, s := range *t {
+		sum += s.Amount
+	}
+	sums := fmt.Sprintf("%.2f", sum)
+	return []string{"", "Total", sums, "", "", ""}, nil
 }
 
 var (

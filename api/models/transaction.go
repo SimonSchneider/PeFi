@@ -1,10 +1,13 @@
 package models
 
 import (
+	"fmt"
 	"time"
 )
 
 type (
+	Transactions []Transaction
+
 	Transaction struct {
 		ID         int64     `json:"id" db:"id"`
 		Time       time.Time `json:"time" db:"time"`
@@ -14,6 +17,15 @@ type (
 		LabelID    int64     `json:"label_id" db:"label_id"`
 	}
 )
+
+func (t *Transactions) Footer() ([]string, error) {
+	sum := float64(0.0)
+	for _, s := range *t {
+		sum += s.Amount
+	}
+	sums := fmt.Sprintf("%.2f", sum)
+	return []string{"", "Total", sums, "", "", ""}, nil
+}
 
 // Name returns the name of category endpoint
 func (c *Transaction) URL() string {
