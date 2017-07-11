@@ -1,5 +1,7 @@
 package models
 
+import "fmt"
+
 type (
 	InternalAccount struct {
 		ExternalAccount
@@ -21,6 +23,7 @@ func (c *InternalAccount) GetAll(user int64) (interface{}, error) {
 		`
 	categories := []InternalAccount{}
 	err := db.Select(&categories, query, user)
+	fmt.Println(categories)
 	return &categories, err
 }
 

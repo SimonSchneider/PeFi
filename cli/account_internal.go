@@ -14,7 +14,7 @@ func internalAccountCommand() cli.Command {
 		Subcommands: GetAPISubCmd(
 			"/accounts/internal",
 			new(models.InternalAccount),
-			new(models.InternalAccount),
+			new([]models.InternalAccount),
 			createInternalAccount,
 			internalAccountFlags,
 			createGraph,

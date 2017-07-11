@@ -9,6 +9,8 @@ import (
 	"github.com/urfave/cli"
 	"net/http"
 	"os"
+	"pefi/api/models"
+	"reflect"
 	"strconv"
 )
 
@@ -56,21 +58,20 @@ var (
 	}
 
 	delFlags = []cli.Flag{}
+
+	typesToPrint = []reflect.Type{
+		reflect.TypeOf(models.ExternalAccount{}),
+		reflect.TypeOf(models.InternalAccount{}),
+		reflect.TypeOf(models.Category{}),
+		reflect.TypeOf(models.Label{}),
+		reflect.TypeOf(models.Transaction{}),
+	}
 )
 
 //GetAddr get the full address of the server endpoint
 func GetAddr(endpoint string) string {
 	return "http://" + Conn.Host + ":" + strconv.Itoa(Conn.Port) + endpoint
 }
-
-//ToTable create a table from the content of t
-//func ToTable(t tabular, w io.Writer) {
-//table := tablewriter.NewWriter(w)
-//table.SetHeader(t.Header())
-//table.AppendBulk(t.Body())
-//table.SetFooter(t.Footer())
-//table.Render()
-//}
 
 func GetAPISubCmd(endpoint string, mod interface{}, mods interface{}, cF func(*cli.Context) (interface{}, error), flags APIFlags, finalF func(*cli.Context, interface{}) error) []cli.Command {
 	return []cli.Command{
@@ -158,7 +159,7 @@ func ListCmd(c *cli.Context, f func(string) (interface{}, error), ff func(*cli.C
 		}
 		return nil
 	}
-	gentab.PrintTable(out, t)
+	gentab.PrintTable(out, t, typesToPrint)
 	if ff != nil {
 		ff(c, t)
 	}
@@ -183,7 +184,7 @@ func GetCmd(c *cli.Context, f func(string) (interface{}, error)) error {
 		}
 		return nil
 	}
-	gentab.PrintTable(out, t)
+	gentab.PrintTable(out, t, typesToPrint)
 	return nil
 }
 
