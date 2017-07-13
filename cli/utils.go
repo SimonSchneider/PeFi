@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/simonschneider/gentab"
+	"github.com/simonschneider/dyntab"
 	"github.com/urfave/cli"
 	"net/http"
 	"os"
 	"pefi/api/models"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 type (
@@ -65,6 +66,19 @@ var (
 		reflect.TypeOf(models.Category{}),
 		reflect.TypeOf(models.Label{}),
 		reflect.TypeOf(models.Transaction{}),
+	}
+
+	typesToSpecialize = []dyntab.ToSpecialize{
+		dyntab.ToSpecialize{
+			reflect.TypeOf(time.Time{}),
+			func(i interface{}) (string, error) {
+				t, ok := i.(time.Time)
+				if ok {
+					return t.Format("2006-01-02"), nil
+				}
+				return "", nil
+			},
+		},
 	}
 )
 
@@ -159,7 +173,7 @@ func ListCmd(c *cli.Context, f func(string) (interface{}, error), ff func(*cli.C
 		}
 		return nil
 	}
-	gentab.PrintTable(out, t, typesToPrint)
+	dyntab.PrintTable(out, t, typesToPrint, typesToSpecialize)
 	if ff != nil {
 		ff(c, t)
 	}
@@ -184,7 +198,8 @@ func GetCmd(c *cli.Context, f func(string) (interface{}, error)) error {
 		}
 		return nil
 	}
-	gentab.PrintTable(out, t, typesToPrint)
+
+	dyntab.PrintTable(out, t, typesToPrint, typesToSpecialize)
 	return nil
 }
 
