@@ -2,8 +2,8 @@
 
 Main Repository for PErsonal FInance. This repo contains the database, model descriptions as well as the golang REST API. It also contains the docker compose build and development files for both production and development deployments.
 
-There is a golang CLI client in the repository: [pefi-cli](https://github.com/simonschneider/pefi-cli)
-There is a web client in the repository: [pefi-web](https://github.com/simonschneider/pefi-web)
+* [pefi-cli](https://github.com/simonschneider/pefi-cli) Golang CLI client
+* [pefi-web](https://github.com/simonschneider/pefi-web) Web client
 
 ## Requirements
 
