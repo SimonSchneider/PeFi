@@ -1,3 +1,3 @@
 FROM scratch
 COPY pefi/ /
-CMD ["/main"]
+CMD ["/pefi-api"]

@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+        pefi-api:
+                build: .
+                image: 'simonschneider/pefi:api'
+                environment:
+                        - postgres-host=postgres
+                        - postgres-port=5432
+                        - redis-host=redis
+                        - redis-port=6379
+                ports:
+                        - 8080:8080
+                        - 22400:22400
+
+        redis:
+                image: 'redis:alpine'
+        postgres:
+                image: 'postgres:alpine'
