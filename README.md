@@ -1,28 +1,22 @@
 # pefi
-Personal finance
 
-## Different Views
+Main Repository for PErsonal FInance. This repo contains the database, model descriptions as well as the golang REST API. It also contains the docker compose build and development files for both production and development deployments.
 
-### Daily View
-- Log expenses each day
-- Show a rolling 30 day average of expenses and do calculations based on that
-
-### Analytics View
-- Show statistics of daylie expenses, bills, savings and income
-
-### Savings View
-- Show saving statistics and predictions
-- Sofisticated predictions based on # rolling average expenses and extrapolation from that
+There is a golang CLI client in the repository: [pefi-cli](https://github.com/simonschneider/pefi-cli)
+There is a web client in the repository: [pefi-web](https://github.com/simonschneider/pefi-web)
 
 ## Requirements
 
 * Accounts can be external (non tracked) or internal (tracked)
 * Categories can be applied to accounts (savings-longterm, savings-shortterm) (either savings or non-savings)
+* [Deprecated] Nested categories
 * Transactions between accounts
-* Categories can be applied to transactions (same categories as accounts?)
+* Labels can be applied to transactions
 * With categories accounts and expenses can be categorized.
+* Loans (transactions with other transactions as payback)
+* Future transactions for predictions and planning
 
-### Categorie Tree
+### [Deprecated] Categorie Tree
 * Saving
   * Long-term
   * Short-term
