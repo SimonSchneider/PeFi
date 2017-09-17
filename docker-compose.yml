@@ -5,6 +5,7 @@ services:
                 build: .
                 volumes:
                         - .:/go/src/pefi
+                        - .:/go/src/github.com/simonschneider/pefi
                 tty: true
                 environment:
                         - GOPATH=/go
