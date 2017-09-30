@@ -1,42 +1,39 @@
-DROP TABLE users CASCADE;
-DROP TABLE category CASCADE;
-DROP TABLE external_account CASCADE;
-DROP TABLE internal_account CASCADE;
-DROP TABLE label CASCADE;
-DROP TABLE transaction CASCADE;
-DROP TABLE loan CASCADE;
+DROP DATABASE IF EXISTS pefi;
+CREATE DATABASE pefi;
 
-CREATE TABLE users (
+\c pefi
+
+CREATE TABLE IF NOT EXISTS users (
 	id BIGSERIAL NOT NULL PRIMARY KEY
 );
 
-CREATE TABLE category (
+CREATE TABLE IF NOT EXISTS category (
 	id BIGSERIAL NOT NULL PRIMARY KEY,
 	name TEXT,
 	description TEXT,
 	user_id BIGINT NOT NULL REFERENCES users(id)
 );
 
-CREATE TABLE external_account (
+CREATE TABLE IF NOT EXISTS external_account (
 	id BIGSERIAL NOT NULL PRIMARY KEY,
 	name VARCHAR(40),
 	description VARCHAR(255),
 	category_id BIGINT NOT NULL REFERENCES category(id)
 );
 
-CREATE TABLE internal_account (
+CREATE TABLE IF NOT EXISTS internal_account (
 	external_account_id BIGINT NOT NULL REFERENCES external_account(id) ON DELETE CASCADE,
 	balance DECIMAL (18, 2)
 );
 
-CREATE TABLE label (
+CREATE TABLE IF NOT EXISTS label (
 	id BIGSERIAL NOT NULL PRIMARY KEY,
 	name VARCHAR(40),
 	description VARCHAR(255),
 	category_id BIGINT NOT NULL REFERENCES category(id)
 );
 
-CREATE TABLE transaction (
+CREATE TABLE IF NOT EXISTS transaction (
 	id BIGSERIAL NOT NULL PRIMARY KEY,
 	time TIMESTAMP NOT NULL,
 	amount DECIMAL NOT NULL,
@@ -45,8 +42,8 @@ CREATE TABLE transaction (
 	label_id BIGINT NOT NULL REFERENCES label(id)
 );
 
-CREATE TABLE loan (
+CREATE TABLE IF NOT EXISTS loan (
 	transaction_id BIGINT NOT NULL REFERENCES transaction(id) ON DELETE CASCADE,
-	payback_id BIGINT NOT NULL REFERENCES transaction(id)
+	payback_id BIGINT NOT NULL REFERENCES transaction(id),
 	PRIMARY KEY (transaction_id, payback_id)
-)
+);
