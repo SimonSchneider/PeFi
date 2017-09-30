@@ -8,7 +8,7 @@ import (
 	"github.com/gocraft/dbr"
 	"github.com/gorilla/mux"
 	"net/http"
-	"pefi/api/models"
+	"github.com/simonschneider/pefi/api/models"
 	"strconv"
 )
 

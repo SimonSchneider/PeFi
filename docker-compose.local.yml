@@ -1,0 +1,13 @@
+version: '2'
+
+services:
+  redis:
+    image: 'redis:alpine'
+    ports:
+      - 6379:6379
+  postgres:
+    image: 'postgres:alpine'
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d/
+    ports:
+      - 5432:5432

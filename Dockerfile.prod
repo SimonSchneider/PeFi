@@ -1,0 +1,9 @@
+FROM golang as builder
+COPY api/ /go/src/github.com/simonschneider/pefi/api/
+WORKDIR /go/src/github.com/simonschneider/pefi/api/
+RUN go get .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o pefi-api .
+
+FROM scratch
+COPY --from=builder /go/src/github.com/simonschneider/pefi/api/pefi-api .
+CMD ["/pefi-api"]

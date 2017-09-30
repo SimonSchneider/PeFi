@@ -7,10 +7,10 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
+	"github.com/simonschneider/pefi/api/models"
 	_ "github.com/lib/pq"
 	"net/http"
 	"os"
-	"pefi/api/models"
 	"strconv"
 )
 
@@ -71,13 +71,20 @@ func main() {
 		Handle("/testing/{id}", TmpG()).
 		Methods("GET")
 
-	dbinfo := "host=postgres user=postgres database=pefi sslmode=disable"
+	dbHost := os.Getenv("postgres-host")
+	if dbHost == "" {
+		dbHost = "localhost"
+	}
+
+	dbinfo := "host="+dbHost+" user=postgres database=pefi sslmode=disable"
 
 	tmp, err := sqlx.Connect("postgres", dbinfo)
 	if err != nil {
+		fmt.Println("error1")
 		return
 	}
 	if err = tmp.Ping(); err != nil {
+		fmt.Println("error2")
 		return
 	}
 	db = tmp
