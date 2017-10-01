@@ -7,8 +7,8 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
-	"github.com/simonschneider/pefi/api/models"
 	_ "github.com/lib/pq"
+	"github.com/simonschneider/pefi/api/models"
 	"net/http"
 	"os"
 	"strconv"
@@ -76,7 +76,7 @@ func main() {
 		dbHost = "localhost"
 	}
 
-	dbinfo := "host="+dbHost+" user=postgres database=pefi sslmode=disable"
+	dbinfo := "host=" + dbHost + " user=postgres database=pefi sslmode=disable"
 
 	tmp, err := sqlx.Connect("postgres", dbinfo)
 	if err != nil {
