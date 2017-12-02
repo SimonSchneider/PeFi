@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/simonschneider/pefi/pefi-accounts/middleware"
+	"github.com/simonschneider/pefi/middleware"
 	"net/http"
 )
 

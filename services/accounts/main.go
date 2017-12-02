@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/simonschneider/pefi/pefi-accounts/middleware"
+	"github.com/simonschneider/pefi/middleware"
 	"log"
 	"net/http"
 	"os"
