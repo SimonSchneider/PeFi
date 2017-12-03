@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -18,7 +17,7 @@ const (
 	CorrelationId
 )
 
-func ContextMW(next http.Handler) http.Handler {
+func Context(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("username")
 		if err != nil {
@@ -34,16 +33,15 @@ func ContextMW(next http.Handler) http.Handler {
 	})
 }
 
-func TimerMW(next http.Handler) http.Handler {
+func Timer(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		next.ServeHTTP(w, r)
-		fmt.Println("serverTime " + time.Since(start).String())
 		w.Header().Set("serverTime", time.Since(start).String())
 	})
 }
 
-func GeneralMW(serviceName string) Adapter {
+func General(serviceName string) Adapter {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			hostname, _ := os.Hostname()
@@ -54,7 +52,7 @@ func GeneralMW(serviceName string) Adapter {
 	}
 }
 
-func JsonMW(next http.Handler) http.Handler {
+func Json(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("service", "accountService")
