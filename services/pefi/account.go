@@ -1,7 +1,7 @@
-package accounts
+package pefi
 
 type (
-	Service interface {
+	AccountService interface {
 		OpenExternal(name, owner, description string) (*ExternalAccount, error)
 		OpenInternal(name, owner, description string) (*InternalAccount, error)
 		Update(name string, new interface{}) error

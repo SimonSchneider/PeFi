@@ -5,17 +5,23 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/simonschneider/pefi/middleware"
-	"github.com/simonschneider/pefi/services/accounts"
+	"github.com/simonschneider/pefi/services/pefi"
 	"net/http"
 )
 
 type (
-	Handler struct {
-		Service accounts.Service
+	AccountHandler struct {
+		service pefi.AccountService
 	}
 )
 
-func (h *Handler) Open() http.HandlerFunc {
+func NewAccountHandler(s pefi.AccountService) *AccountHandler {
+	return &AccountHandler{
+		service: s,
+	}
+}
+
+func (h *AccountHandler) Open() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		ctx := r.Context()
@@ -25,9 +31,9 @@ func (h *Handler) Open() http.HandlerFunc {
 		var acc interface{}
 		switch vars["type"] {
 		case "external":
-			acc, _ = h.Service.OpenExternal("accName", "ownerName", "description")
+			acc, _ = h.service.OpenExternal("accName", "ownerName", "description")
 		case "internal":
-			acc, _ = h.Service.OpenInternal("accName", "ownerName", "description")
+			acc, _ = h.service.OpenInternal("accName", "ownerName", "description")
 		default:
 			msg := "unsupported Type"
 			fmt.Println(msg)
@@ -41,10 +47,10 @@ func (h *Handler) Open() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) Update() http.HandlerFunc {
+func (h *AccountHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		account, err := h.Service.Get(vars["name"])
+		account, err := h.service.Get(vars["name"])
 		if err != nil {
 			fmt.Println("no such account")
 			return
@@ -55,10 +61,10 @@ func (h *Handler) Update() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) Get() http.HandlerFunc {
+func (h *AccountHandler) Get() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		account, err := h.Service.Get(vars["name"])
+		account, err := h.service.Get(vars["name"])
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -75,15 +81,8 @@ func (h *Handler) Get() http.HandlerFunc {
 	}
 }
 
-func Start(h *Handler) {
-	router := mux.NewRouter().PathPrefix("/api/accounts/").Subrouter()
+func (h *AccountHandler) Attach(top *mux.Router) {
+	router := top.PathPrefix("/api/accounts/").Subrouter()
 	router.HandleFunc("/open/{type}", h.Open())
 	router.HandleFunc("/{name}", h.Get())
-
-	http.ListenAndServe(":8080", middleware.ApplyMiddleware(router,
-		middleware.Json,
-		middleware.General("accountService"),
-		middleware.Timer,
-		middleware.Context,
-	))
 }
