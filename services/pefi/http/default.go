@@ -3,7 +3,9 @@ package http
 import (
 	"github.com/gorilla/mux"
 	"github.com/simonschneider/pefi/middleware"
+	"log"
 	"net/http"
+	"net/url"
 )
 
 type (
@@ -12,21 +14,31 @@ type (
 	}
 )
 
-func Init() *mux.Router {
-	return mux.NewRouter()
-}
-
-func AttachAndStart(handlers ...Handler) {
+func GetRouter(handlers ...Handler) *mux.Router {
 	router := mux.NewRouter()
-
 	for _, handler := range handlers {
 		handler.Attach(router)
 	}
+	return router
+}
 
-	http.ListenAndServe(":8080", middleware.ApplyMiddleware(router,
+func AttachAndStart(handlers ...Handler) {
+	router := GetRouter(handlers...)
+
+	log.Fatal(http.ListenAndServe(":8080", middleware.ApplyMiddleware(router,
 		middleware.Json,
 		middleware.General("accountService"),
 		middleware.Timer,
-		middleware.Context,
-	))
+		//middleware.Context,
+	)))
+}
+
+func getRequest(url *url.URL) (*http.Request, error) {
+	url.Host = "localhost:8080"
+	url.Scheme = "http"
+	return http.NewRequest(
+		"GET",
+		url.String(),
+		nil,
+	)
 }

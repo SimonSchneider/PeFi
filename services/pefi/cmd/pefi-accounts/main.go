@@ -17,8 +17,15 @@ func init() {
 func main() {
 	log.Info("starting")
 	log.Warn("warnign")
-
-	service := redis.NewAccountService(postgres.NewAccountService())
+	config := &postgres.Config{
+		User: "test",
+	}
+	pservice, err := postgres.NewAccountService(config)
+	if err != nil {
+		log.Error("Error connecting to db: ", err)
+		os.Exit(1)
+	}
+	service := redis.NewAccountService(pservice)
 
 	handler := http.NewAccountHandler(service)
 
