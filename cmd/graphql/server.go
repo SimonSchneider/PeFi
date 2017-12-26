@@ -6,8 +6,8 @@ import (
 
 	"github.com/neelance/graphql-go"
 	"github.com/neelance/graphql-go/relay"
-	pefig "github.com/simonschneider/pefi/services/pefi/graphql"
-	pefihttp "github.com/simonschneider/pefi/services/pefi/http"
+	pefig "github.com/simonschneider/pefi/graphql"
+	pefihttp "github.com/simonschneider/pefi/http"
 )
 
 var schema *graphql.Schema

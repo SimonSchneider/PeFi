@@ -6,7 +6,7 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 	"github.com/satori/go.uuid"
-	"github.com/simonschneider/pefi/services/pefi"
+	"github.com/simonschneider/pefi"
 )
 
 type (
@@ -71,7 +71,6 @@ func (s AccountService) Get(ctx context.Context, id pefi.ID) (*pefi.Account, err
 
 func (s AccountService) GetAll(ctx context.Context, userID pefi.ID) ([]*pefi.Account, error) {
 	var accs []*pefi.Account
-	fmt.Println(userID)
 	rows, err := s.db.QueryContext(ctx, "SELECT id, name, owner_id, description, balance, currency FROM account WHERE owner_id = $1", userID)
 	if err != nil {
 		fmt.Println(err)

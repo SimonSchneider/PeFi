@@ -3,7 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
-	"github.com/simonschneider/pefi/services/pefi"
+	"github.com/simonschneider/pefi"
 )
 
 type (

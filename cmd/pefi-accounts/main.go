@@ -1,9 +1,8 @@
 package main
 
 import (
-	"github.com/simonschneider/pefi/services/pefi/http"
-	"github.com/simonschneider/pefi/services/pefi/postgres"
-	//"github.com/simonschneider/pefi/services/pefi/redis"
+	"github.com/simonschneider/pefi/http"
+	"github.com/simonschneider/pefi/postgres"
 	log "github.com/sirupsen/logrus"
 	"os"
 )

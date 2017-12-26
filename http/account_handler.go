@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/simonschneider/pefi"
 	"github.com/simonschneider/pefi/middleware"
-	"github.com/simonschneider/pefi/services/pefi"
 	"net/http"
 )
 

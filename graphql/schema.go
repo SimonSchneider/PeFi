@@ -2,8 +2,7 @@ package graphql
 
 import (
 	"context"
-	"fmt"
-	"github.com/simonschneider/pefi/services/pefi"
+	"github.com/simonschneider/pefi"
 )
 
 var Services struct {
@@ -93,9 +92,7 @@ func (r *Resolver) Account(ctx context.Context, args struct{ ID *string }) (*acc
 }
 
 func (r *Resolver) Accounts(ctx context.Context, args struct{ UserID *string }) ([]*accountResolver, error) {
-	fmt.Println(*args.UserID)
 	accounts, err := Services.AS.GetAll(context.Background(), pefi.ID(*args.UserID))
-	fmt.Println(accounts)
 	if err != nil {
 		return nil, err
 	}

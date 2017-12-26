@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/simonschneider/pefi/services/pefi"
+	"github.com/simonschneider/pefi"
 	"net/http"
 )
 
@@ -77,7 +76,6 @@ func (a *AccountService) Get(ctx context.Context, id pefi.ID) (*pefi.Account, er
 
 func (a *AccountService) GetAll(ctx context.Context, userID pefi.ID) ([]*pefi.Account, error) {
 	url, err := a.r.Get("getAccounts").URL("user", string(userID))
-	fmt.Println(url)
 	if err != nil {
 		return nil, err
 	}
