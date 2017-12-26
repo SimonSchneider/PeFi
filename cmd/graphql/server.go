@@ -22,7 +22,9 @@ func main() {
 	}))
 
 	router := pefihttp.GetRouter(&pefihttp.AccountHandler{})
+	userRouter := pefihttp.GetRouter(&pefihttp.UserHandler{})
 	pefig.Services.AS = pefihttp.NewAccountService(router)
+	pefig.Services.US = pefihttp.NewUserService(userRouter)
 
 	http.Handle("/query", &relay.Handler{Schema: schema})
 

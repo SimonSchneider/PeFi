@@ -21,16 +21,14 @@ func main() {
 		DbName:  "pefi",
 		Sslmode: "disable",
 	}
-	service, err := postgres.NewAccountService(config)
-	userService, err := postgres.NewUserService(config)
+	service, err := postgres.NewUserService(config)
 	if err != nil {
 		log.Error("Error connecting to db: ", err)
 		os.Exit(1)
 	}
 	//service := redis.NewAccountService(pservice)
 
-	handler := http.NewAccountHandler(service)
-	userHandler := http.NewUserHandler(userService)
+	handler := http.NewUserHandler(service)
 
-	http.AttachAndStart(handler, userHandler)
+	http.AttachAndStart(":8070", handler)
 }

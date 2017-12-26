@@ -37,7 +37,7 @@ func (s AccountService) Open(ctx context.Context, name string, ownerID pefi.ID, 
 		Description: description,
 		Balance:     pefi.MonetaryAmount{0, "SEK"},
 	}
-	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO account(id, name, description, owner_id, balance, currency) VALUES($1, $2, $3, $4, $5, $6)")
+	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO accounts(id, name, description, owner_id, balance, currency) VALUES($1, $2, $3, $4, $5, $6)")
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -60,7 +60,7 @@ func (s AccountService) Delete(ctx context.Context, id pefi.ID) error {
 
 func (s AccountService) Get(ctx context.Context, id pefi.ID) (*pefi.Account, error) {
 	var acc pefi.Account
-	err := s.db.QueryRowContext(ctx, "SELECT id, name, owner_id, description, balance, currency FROM account WHERE id = $1", id).
+	err := s.db.QueryRowContext(ctx, "SELECT id, name, owner_id, description, balance, currency FROM accounts WHERE id = $1", id).
 		Scan(&acc.ID, &acc.Name, &acc.OwnerID, &acc.Description, &acc.Balance.Amount, &acc.Balance.Currency)
 	if err != nil {
 		fmt.Println(err)
@@ -71,7 +71,7 @@ func (s AccountService) Get(ctx context.Context, id pefi.ID) (*pefi.Account, err
 
 func (s AccountService) GetAll(ctx context.Context, userID pefi.ID) ([]*pefi.Account, error) {
 	var accs []*pefi.Account
-	rows, err := s.db.QueryContext(ctx, "SELECT id, name, owner_id, description, balance, currency FROM account WHERE owner_id = $1", userID)
+	rows, err := s.db.QueryContext(ctx, "SELECT id, name, owner_id, description, balance, currency FROM accounts WHERE owner_id = $1", userID)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
