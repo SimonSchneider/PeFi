@@ -27,9 +27,9 @@ func MonAm2String(i interface{}) (string, error) {
 func main() {
 	router := http.GetRouter(&http.AccountHandler{})
 	service := http.NewAccountService(router)
-	accI, _ := service.Open(context.Background(), "test2", "owner", "description")
+	accI, _ := service.Open(context.Background(), "test2", "2ae9052c-8033-477c-a7ae-ae65e6b58879", "description")
 	fmt.Println(accI)
-	accI2, err := service.Get(context.Background(), "accNameInt")
+	accI2, err := service.Get(context.Background(), accI.ID)
 	if err != nil {
 		fmt.Println(err)
 		return

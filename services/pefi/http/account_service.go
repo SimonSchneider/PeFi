@@ -3,6 +3,8 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/simonschneider/pefi/services/pefi"
 	"net/http"
@@ -23,7 +25,7 @@ func NewAccountService(router *mux.Router) *AccountService {
 	}
 }
 
-func (a *AccountService) Open(ctx context.Context, name, owner, description string) (*pefi.Account, error) {
+func (a *AccountService) Open(ctx context.Context, name string, owner pefi.ID, description string) (*pefi.Account, error) {
 	url, err := a.r.Get("openAccount").URL("type", "internal")
 	if err != nil {
 		return nil, err
@@ -45,15 +47,15 @@ func (a *AccountService) Open(ctx context.Context, name, owner, description stri
 	return acc, err
 }
 
-func (a *AccountService) Update(ctx context.Context, name string, new interface{}) error {
+func (a *AccountService) Update(ctx context.Context, id pefi.ID, new interface{}) error {
 	return nil
 }
 
-func (a *AccountService) Delete(ctx context.Context, name string) error {
+func (a *AccountService) Delete(ctx context.Context, id pefi.ID) error {
 	return nil
 }
-func (a *AccountService) Get(ctx context.Context, name string) (*pefi.Account, error) {
-	url, err := a.r.Get("getAccount").URL("name", name)
+func (a *AccountService) Get(ctx context.Context, id pefi.ID) (*pefi.Account, error) {
+	url, err := a.r.Get("getAccount").URL("name", string(id))
 	if err != nil {
 		return nil, err
 	}
@@ -68,16 +70,39 @@ func (a *AccountService) Get(ctx context.Context, name string) (*pefi.Account, e
 	var acc *pefi.Account
 	defer resp.Body.Close()
 	if err := json.NewDecoder(resp.Body).Decode(&acc); err != nil {
-		return nil, err
+		return nil, errors.New("No such account")
 	}
 	return acc, nil
 }
-func (a *AccountService) Transfer(ctx context.Context, sender, receiver string) (string, error) {
+
+func (a *AccountService) GetAll(ctx context.Context, userID pefi.ID) ([]*pefi.Account, error) {
+	url, err := a.r.Get("getAccounts").URL("user", string(userID))
+	fmt.Println(url)
+	if err != nil {
+		return nil, err
+	}
+	req, err := getRequest(url)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := a.c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	var accs []*pefi.Account
+	defer resp.Body.Close()
+	if err := json.NewDecoder(resp.Body).Decode(&accs); err != nil {
+		return nil, errors.New("No such account")
+	}
+	return accs, nil
+}
+
+func (a *AccountService) Transfer(ctx context.Context, sender, receiver pefi.ID) (string, error) {
 	return "done", nil
 }
-func (a *AccountService) Deposit(ctx context.Context, name string, amount uint64) (string, error) {
+func (a *AccountService) Deposit(ctx context.Context, name pefi.ID, amount uint64) (string, error) {
 	return "done", nil
 }
-func (a *AccountService) Withdraw(ctx context.Context, name string, amount uint64) (string, error) {
+func (a *AccountService) Withdraw(ctx context.Context, name pefi.ID, amount uint64) (string, error) {
 	return "done", nil
 }
